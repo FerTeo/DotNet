@@ -1,0 +1,65 @@
+services:
+  # 1) SDK runner — îl folosim pentru 'dotnet new', restore, etc.
+  sdk:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /src
+    environment:
+      - PATH=/root/.dotnet/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    volumes:
+      - ./:/src
+      - nugetstorevolume:/root/.nuget/packages
+      - dotnet-toolsstorevolume:/root/.dotnet/tools
+    # nu pornește by default; îl chemăm punctual cu `docker compose run`
+
+  # 2) App runner — rulează aplicația cu hot-reload
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - PATH=/root/.dotnet/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://0.0.0.0:8080
+      - ConnectionStrings__DefaultConnection=Server=db;Port=3306;Database=${MYSQL_DATABASE:-articles};User=${MYSQL_USER:-appuser};Password=${MYSQL_PASSWORD:-apppass};
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    volumes:
+      - ./:/src
+      - nugetstorevolume:/root/.nuget/packages
+      - dotnet-toolsstorevolume:/root/.dotnet/tools
+    # după ce generăm proiectul, setăm directorul de lucru în subfolderul proiectului
+    working_dir: /src/${DOCKER_PROJECT_NAME:-DockerProject}
+    command: ["sh", "-c", "export PATH=/root/.dotnet/tools:$$PATH && dotnet watch --non-interactive run --urls http://0.0.0.0:8080"]
+    networks: [appnet]
+
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpass}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-OS_DB}
+      MYSQL_USER: ${MYSQL_USER:-appuser}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-apppass}
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - datamountvolume:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootpass}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [appnet]
+
+volumes:
+  datamountvolume:
+  nugetstorevolume:
+  dotnet-toolsstorevolume:
+
+networks:
+  appnet:
+    driver: bridge

@@ -1,0 +1,37 @@
+# Visual Studio / .NET
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+
+# Build outputs
+[Bb]in/
+[Oo]bj/
+publish/
+artifacts/
+
+# Runtime / temporary
+*.log
+*.tmp
+
+# NuGet
+*.nupkg
+packages/
+
+# Rider
+.idea/
+
+# ReSharper
+_ReSharper*/
+
+# Ignore local dev settings
+appsettings.Development.json
+secrets.json
+.env
+
+# Local DB files
+*.db
+*.mdf
+*.ldf
+
