@@ -12,7 +12,7 @@ using OSSocial.Data;
 namespace OSSocial.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251123193149_InitialMigration")]
+    [Migration("20251213230042_InitialMigration")]
     partial class InitialMigration
     {
         /// <inheritdoc />
