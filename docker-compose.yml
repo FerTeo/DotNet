@@ -25,7 +25,7 @@ services:
       - PATH=/root/.dotnet/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://0.0.0.0:8080
-      - ConnectionStrings__DefaultConnection=Server=db;Port=3306;Database=${MYSQL_DATABASE:-articles};User=${MYSQL_USER:-appuser};Password=${MYSQL_PASSWORD:-apppass};
+      - ConnectionStrings__DefaultConnection=Server=db;Port=3306;Database=${MYSQL_DATABASE:-OS_DB};User=${MYSQL_USER:-appuser};Password=${MYSQL_PASSWORD:-apppass};
     ports:
       - "${APP_PORT:-8080}:8080"
     volumes:
@@ -33,7 +33,7 @@ services:
       - nugetstorevolume:/root/.nuget/packages
       - dotnet-toolsstorevolume:/root/.dotnet/tools
     # după ce generăm proiectul, setăm directorul de lucru în subfolderul proiectului
-    working_dir: /src/${DOCKER_PROJECT_NAME:-DockerProject}
+    working_dir: /src/${DOCKER_PROJECT_NAME:-OSSocial}
     command: ["sh", "-c", "export PATH=/root/.dotnet/tools:$$PATH && dotnet watch --non-interactive run --urls http://0.0.0.0:8080"]
     networks: [appnet]
 
