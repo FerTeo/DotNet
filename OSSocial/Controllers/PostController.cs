@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OSSocial.Data;
 using OSSocial.Models;
@@ -32,14 +34,26 @@ namespace OSSocial.Controllers
             return View();
         }
 
+        [Authorize] // necesar ca user-ul sa fie logat, altfel nu poate crea o postare
         public IActionResult CreatePost() // ar tb sa returneze un formular
         {
             return View();
         }
 
         [HttpPost]
+        [Authorize] // te trimite direct la login daca nu esti logat!!
         public IActionResult CreatePost(Post postare) // metoda apelata cand se da submit la formular
         {
+            // time and userId set automatically 
+            postare.Time = DateTime.Now;
+            
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            postare.UserId = currentUserId;
+            
+            // validare/ clear validation errors
+            ModelState.Remove(nameof(postare.UserId));
+            ModelState.Remove(nameof(postare.Time));
+            
             try
             {
                 db.Posts.Add(postare);
@@ -52,6 +66,7 @@ namespace OSSocial.Controllers
             }
         }
 
+        [Authorize]
         public IActionResult EditPost(int id)
         {
             Post postare = db.Posts.Find(id);
@@ -59,18 +74,30 @@ namespace OSSocial.Controllers
             return View();
         }
 
+        
         [HttpPost]
+        [Authorize]
         public IActionResult EditPost(int id, Post postareFormular)
         {
             Post postareModif = db.Posts.Find(id);
 
+            // dupa ce sunt toate rolurile configurate 100% corect si ideea de admin implementata
+            // if care verifica daca modificarile provin de la acelasi user care a creat proiectul 
+            //
+            // var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            // if (postareFormular.UserId != currentUserId)
+            // {
+            //     return Forbid();
+            // }
+            
             try
             {
                 postareModif.Title = postareFormular.Title;
                 postareModif.Content = postareFormular.Content;
-                postareModif.Id = postareFormular.Id;
-                postareModif.UserId = postareFormular.UserId;
-                // postareModif.Time; pt ca pastrez doar ora postarii nu modific timpul, in viitor va tb adaugata chestia asta 
+
+                db.SaveChanges();
+                
+                // postareModif.Time; pt ca pastrez doar ora postarii nu modific timpul, in viitor va tb adaugata chestia asta (adic edit time; sa apara ca postarea a fost editata)
                 
                 return RedirectToAction("Feed");
             }

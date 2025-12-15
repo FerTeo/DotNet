@@ -1,0 +1,23 @@
+@{
+    ViewData["Title"] = "Add new post";
+}
+<h1>@ViewData["Title"]</h1>
+
+<form method="post" action="/Post/CreatePost">
+    <label>Title</label>
+    <br/>
+    <input type="text" name="Title"/>
+    <br/>
+    
+    <label>Content</label>
+    <br/>
+    <input type="text" name="content"/>
+    <br/>
+    
+    <br/>
+    <br/>
+    <button type="submit">Post!</button>
+</form>
+
+
+<p>In progress</p>

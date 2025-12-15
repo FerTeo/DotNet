@@ -56,11 +56,34 @@ app.UseAuthorization();
 
 app.MapStaticAssets();
 
+// mappare postare
+
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
 
+app.MapControllerRoute(
+    name: "posts",
+    pattern: "{controller=Post}/{action=Feed}"
+).WithStaticAssets();
+
+app.MapControllerRoute(
+    name: "createPost",
+    pattern: "{controller=Post}/{action=CreatePost}"
+    ).WithStaticAssets();
+
+app.MapControllerRoute(
+    name: "detailsPost",
+    pattern:"{controller=Post}/{action=Details}/{id?}"
+    ).WithStaticAssets();
+
+app.MapControllerRoute(
+    name:"editPost",
+    pattern: "{controller=Post}/{action=EditPost}/{id?}"
+    ).WithStaticAssets();
+    
 app.MapRazorPages()
    .WithStaticAssets();
 
