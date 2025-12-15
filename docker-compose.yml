@@ -22,6 +22,7 @@ services:
       db:
         condition: service_healthy
     environment:
+      - DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
       - PATH=/root/.dotnet/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://0.0.0.0:8080

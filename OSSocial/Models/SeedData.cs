@@ -7,7 +7,7 @@ namespace OSSocial.Models
     public static class SeedData
     {
         
-        private static readonly bool resetDb=true;
+        private static readonly bool resetDb=false;
 
         // CREAREA ROLURILOR IN BD
         private static void SeedRoles(ApplicationDbContext context)

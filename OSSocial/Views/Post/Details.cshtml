@@ -1,0 +1,22 @@
+@{
+    ViewData["Title"] = "See post details";
+}
+<h1>@ViewData["Title"]</h1>
+
+<br>
+<p>@ViewBag.Post.Title</p>
+<p>@ViewBag.Post.Content</p>
+<p>@ViewBag.Post.formattedTime</p>
+
+<br/>
+<form method="post" action="/Post/Delete/@ViewBag.Post.Id">
+    <button type="submit">Delete Post</button>
+</form>
+
+<br/>
+
+<a href="/Post/Feed">Return to feed</a>
+
+<br/>
+
+<p>In progress</p>
