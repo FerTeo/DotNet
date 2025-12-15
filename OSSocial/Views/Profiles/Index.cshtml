@@ -1,0 +1,21 @@
+
+@{
+    ViewBag.Title = "title";
+    Layout = "_Layout";
+}
+
+<h2>Afisarea utilizatorilor</h2>
+@if(ViewBag.Message != null){
+
+    <h2 class="p-3 rounded-3 text-center mb-5 alert @ViewBag.Alert">@ViewBag.Message</h2>
+}
+
+<br />
+
+@foreach (OSSocial.Models.ApplicationUser user in ViewBag.UsersList)
+{
+    <div class="card">
+        <p>@user.UserName</p>
+    </div>
+    <br/>
+}

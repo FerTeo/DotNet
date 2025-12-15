@@ -1,0 +1,41 @@
+@model OSSocial.Models.ApplicationUser
+@using System.Linq
+
+@{
+    string initial = !string.IsNullOrEmpty(Model?.UserName) ? Model.UserName.Substring(0, 1).ToUpperInvariant() : "?";
+}
+
+<style>
+    .profile-card { max-width: 720px; margin: 1.5rem auto; }
+    .avatar-circle {
+        width: 96px; height: 96px; border-radius: 50%;
+        background:#6c757d; color:#fff; display:flex;
+        align-items:center; justify-content:center; font-size:36px;
+        font-weight:600;
+    }
+    .meta-label { font-weight:600; color:#495057; }
+
+</style>
+
+<div class="card profile-card">
+    <div class="card-body d-flex gap-4 align-items-center">
+        <div class="avatar-circle" aria-hidden="true">@initial</div>
+
+        <div class="flex-grow-1">
+            <h3 class="mb-1">@Model.DisplayName</h3>
+  
+
+            <div class="mb-2">
+                <div><span class="meta-label">Email: </span> @(!string.IsNullOrEmpty(Model.Email) ? Model.Email : "—")</div>
+                <div><span class="meta-label">Phone: </span> @(!string.IsNullOrEmpty(Model.PhoneNumber) ? Model.PhoneNumber : "—")</div>
+            </div>
+            
+            <div class="mb-2">
+                <div> <span class="meta-label">Bio:@(!string.IsNullOrEmpty(Model.Bio) ? Model.Bio : "—")</span></div>
+
+            </div>
+
+            
+        </div>
+    </div>
+</div>
