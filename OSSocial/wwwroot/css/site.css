@@ -1,5 +1,26 @@
+a {
+  color: #FFFFFF;
+  text-underline-offset: auto;
+}
+
+#backgroundVideo {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: -1; /*te rog pune-l in spatele textului ca mor*/
+}
+
+/*.content {*/
+/*  position: fixed;*/
+/*  bottom: 50;*/
+/*  background: rgba(0, 0, 0, 0.5);*/
+/*  color: #f1f1f1;*/
+/*  width: 30%;*/
+/*  padding: 10em;*/
+/*}*/
+
 html {
-  font-size: 14px;
+  font-size: 20px;
 }
 
 @media (min-width: 768px) {
@@ -19,6 +40,10 @@ html {
 
 body {
   margin-bottom: 60px;
+  /*background-image: url("../images/WindowsXpWallpaper.jpg");*/
+  /*background-repeat: no-repeat;*/
+  /*background-size: cover;*/
+  color: white;
 }
 
 .form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {

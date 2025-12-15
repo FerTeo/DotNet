@@ -1,4 +1,8 @@
-﻿// Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
-// for details on configuring this project to bundle and minify static web assets.
+﻿document.addEventListener("DOMContentLoaded", function() {
+    // listener pt a randa site-ul
+    let vid = document.getElementById("backgroundVideo");
 
-// Write your JavaScript code.
+    if (vid) { // daca video-ul e gasit
+        vid.playbackRate = 0.7; // incetineste-l
+    }
+});

@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <None Update="app.db" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <None Include="wwwroot\assets\WindowsXpWallpaper.jpg" />
   </ItemGroup>
 
   <ItemGroup>
