@@ -1,22 +1,42 @@
 @{
     ViewData["Title"] = "Personal Feed";
 }
-<h1>@ViewData["Title"]</h1>
+<h1 class="text-white">@ViewData["Title"]</h1>
 
 @foreach (var postare in ViewBag.Posts)
 {
-    <p>@postare.Title</p>
-    <p>@postare.Content</p>
-    <p>@postare.formattedTime</p>
-    <br/>
-    <a href="/Post/Details/@postare.Id">Show post details</a>
-    <br/>
-    <a href="/Post/EditPost/@postare.Id">Edit post</a>
-    <hr/>
+    <div class="text-white">
+        <p >@postare.Title</p>
+        <p>@postare.Content</p>
+        <p>@postare.formattedTime</p>
+        
+        @if (!string.IsNullOrEmpty(postare.Media))
+        {
+            @* doar dacă nu e null, verificăm extensia *@
+            if (postare.Media.EndsWith(".mp4") || postare.Media.EndsWith(".mov"))
+            {
+                <video width="550" height="300" controls>
+                    <source src="@postare.Media" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            }
+            else
+            {
+                @* dacă nu e video, e imagine *@
+                <img src="@postare.Media" alt="Article Image" style="width: 100%; max-width: 550px; height: auto; object-fit: cover; border-radius: 10px;" />
+            }
+        }
+        <br/>
+        
+        <a href="/Post/Details/@postare.Id" class="text-white">Show post details</a>
+        <br/>
+        <a href="/Post/EditPost/@postare.Id" class="text-white">Edit post</a>
+        <hr/>    
+    </div>
 }
 
-<a href="/Post/CreatePost">Add a new post</a>
+<a href="/Post/CreatePost" class="text-white">Add a new post</a>
 
 <br/>
 
-<p>Work in progress!</p>
+<p class="text-white">Work in progress!</p>
