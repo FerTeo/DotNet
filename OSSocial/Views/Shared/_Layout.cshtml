@@ -1,4 +1,19 @@
-﻿<!DOCTYPE html>
+﻿@{
+    // default
+    bool userLogat = false;
+    
+    var settingsUrl = Url.Page("/Account/Login", new { area = "Identity" });
+
+    if (User?.Identity?.IsAuthenticated == true)
+    {
+        userLogat = true;
+        settingsUrl = Url.Page("/Account/Manage/Index", new { area = "Identity" });
+    }
+}
+
+
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -11,31 +26,9 @@
 </head>
 <body>
 <header>
-    <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-        <div class="container-fluid">
-            <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">OSSocial</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                    aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                <ul class="navbar-nav flex-grow-1">
-                    <li class="nav-item">
-                        <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-dark" asp-area="" asp-controller="Post" asp-action="Feed">Posts</a>
-                    </li>
-                    
-                    <li class="nav-item">
-                        <a class="nav-link text-dark" asp-action="" asp-controller="Profiles" asp-action="Index">Users</a>
-
-                    </li>
-                </ul>
-                <partial name="_LoginPartial"/>
-            </div>
-        </div>
-    </nav>
+    <br/>
+    <br/>
+    <br/>
 </header>
 @* <video autoplay muted loop id="backgroundVideo"> *@
 @*     <source src="~/assets/snow.mp4" type="video/mp4"/> *@
@@ -45,15 +38,69 @@
         @RenderBody()
     </main>
 </div>
-@* *@
-@* <div class="content"> *@
-@*     <h1>Create an account</h1> *@
-@* </div> *@
 
-    
+
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
+    
+    
+    <nav class="navbar navbar-light bg-white border-top fixed-bottom" role="navigation" aria-label="Dock navigation">
+        <div class="container d-flex justify-content-center">
+            <ul class="nav">
+                <li class="nav-item mx-2">
+                    <a class="nav-link text-center" asp-controller="Home" asp-action="Index" title="Home" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Home" aria-label="Home">
+                        <img src="@Url.Content("~/assets/icons/house.svg")" alt="Home" width="36" height="36" />
+                    </a>
+                </li>
+                
+                
+
+
+                <li class="nav-item mx-2">
+                    <a class="nav-link text-center" asp-controller="Post" asp-action="Feed" title="Feed" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Feed" aria-label="Feed">
+                        <img src="@Url.Content("~/assets/icons/images.svg")" alt="Feed" width="36" height="36"/>
+                    </a>
+                </li>
+
+                <li class="nav-item mx-2">
+                    <a class="nav-link text-center" asp-controller="Profiles" asp-action="Index" title="Users" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Users" aria-label="Users">
+                        <img src="@Url.Content("~/assets/icons/people-fill.svg")" alt="Users" width="36" height="36"/>
+                    </a>
+                </li>
+                
+                
+                <li class="nav-item mx-2">
+                    <a class="nav-link text-center" href="@settingsUrl" title="Settings" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Settings" aria-label="Settings">
+                        <img src="@Url.Content("~/assets/icons/gear.svg")" alt="Settings" width="36" height="36"/>
+                    </a>
+                </li>
+                
+                @if (@userLogat == true)
+                {
+                    <li class="nav-item mx-2">
+                        <form  class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                            <button type="submit" class="nav-link text-center" title="Logout" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Logout" aria-label="Settings">
+                                <img src="@Url.Content("~/assets/icons/box-arrow-left.svg")" alt="Logout" width="36" height="36"/>
+                            </button>
+                        </form>
+                    </li>
+                    
+                }
+
+            </ul>
+        </div>
+    </nav>
+
+    <script>
+        (function () {
+            // Initialize all Bootstrap tooltips on the page
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        })();
+    </script>
 </body>
 </html>
