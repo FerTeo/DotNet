@@ -4,6 +4,7 @@
 *.user
 *.suo
 *.userosscache
+Migrations/
 
 # Build outputs
 [Bb]in/

@@ -30,10 +30,6 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     var context = services.GetRequiredService<ApplicationDbContext>();
     
-    // Aplică migrațiile înainte de seed
-    context.Database.Migrate();
-    
-    // După ce baza e creată, populează-o
     SeedData.Initialize(services);
 }
 

@@ -47,42 +47,56 @@ namespace OSSocial.Models
                 new ApplicationUser
                 {
                     Id = "8e445865-a24d-4543-a6c6-9443d048cdb0", // primary key
-                    UserName = "admin@test.com",
+                    UserName = "admin",
                     EmailConfirmed = true,
                     NormalizedEmail = "ADMIN@TEST.COM",
                     Email = "admin@test.com",
-                    NormalizedUserName = "ADMIN@TEST.COM",
-                    PasswordHash = hasher.HashPassword(null, "Admin1!")
+                    NormalizedUserName = "ADMIN",
+                    PasswordHash = hasher.HashPassword(null, "Admin1!"),
+                    DisplayName = "Admin",
+                    Bio = "Adminul aplicatiei web",
+                    PhoneNumber = "0888888888",
+                    PhoneNumberConfirmed = true,
                 },
                 new ApplicationUser
                 {
                     Id = "8e445865-a24d-4543-a6c6-9443d048cdb1", // primary key
-                    UserName = "editor@test.com",
+                    UserName = "edtitor123",
                     EmailConfirmed = true,
                     NormalizedEmail = "EDITOR@TEST.COM",
                     Email = "editor@test.com",
-                    NormalizedUserName = "EDITOR@TEST.COM",
-                    PasswordHash = hasher.HashPassword(null, "Editor1!")
+                    NormalizedUserName = "EDITOR123@TEST.COM",
+                    PasswordHash = hasher.HashPassword(null, "Editor1!"),
+                    DisplayName = "Editor", 
+                    Bio = "Your favourite editor",
+                    PhoneNumber = "0888888888",
+                    PhoneNumberConfirmed = true,
                 },
                 new ApplicationUser
                 {
                     Id = "8e445865-a24d-4543-a6c6-9443d048cdb2", // primary key
-                    UserName = "user@test.com",
+                    UserName = "user01",
                     EmailConfirmed = true,
                     NormalizedEmail = "USER@TEST.COM",
                     Email = "user@test.com",
-                    NormalizedUserName = "USER@TEST.COM",
-                    PasswordHash = hasher.HashPassword(null, "User1!")
+                    NormalizedUserName = "USER01",
+                    PasswordHash = hasher.HashPassword(null, "User1!"),
+                    DisplayName = "User",
+                    Bio = "Your favourite user",
+                    PhoneNumber = "0888888888",
+                    PhoneNumberConfirmed = true,
                 },
                 new ApplicationUser
                 {
                     Id = "8e445865-a24d-4543-a6c6-9443d048cdb3", // primary key
-                    UserName = "fernando@test.com",
+                    UserName = "fernando",
                     EmailConfirmed = true,
                     NormalizedEmail = "FERNANDO@TEST.COM",
                     Email = "FERNANDO@test.com",
-                    NormalizedUserName = "FERNANDO@TEST.COM",
-                    PasswordHash = hasher.HashPassword(null, "Fernando1!")
+                    NormalizedUserName = "FERNANDO",
+                    PasswordHash = hasher.HashPassword(null, "Fernando1!"),
+                    DisplayName = "Fernando-Emanuel",
+                    Bio = "Your one and only fernando",
                 }
             );
         }
@@ -119,10 +133,8 @@ namespace OSSocial.Models
         // RESETARE BD
         private static void ResetDatabase(ApplicationDbContext context)
         {
-            context.UserRoles.RemoveRange(context.UserRoles);
-            context.Users.RemoveRange(context.Users);
-            context.Roles.RemoveRange(context.Roles);
-            context.SaveChanges();
+            context.Database.EnsureDeleted();
+            context.Database.EnsureCreated();
         }
         
         
