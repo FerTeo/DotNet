@@ -1,6 +1,6 @@
-a {
+
+#whiteText {
   color: #FFFFFF;
-  text-underline-offset: auto;
 }
 
 #backgroundVideo {
@@ -43,7 +43,7 @@ body {
   /*background-image: url("../images/WindowsXpWallpaper.jpg");*/
   /*background-repeat: no-repeat;*/
   /*background-size: cover;*/
-  color: white;
+  /*color: white;*/
 }
 
 .form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {

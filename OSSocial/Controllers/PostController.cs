@@ -42,7 +42,7 @@ namespace OSSocial.Controllers
 
         [HttpPost]
         [Authorize] // te trimite direct la login daca nu esti logat!!
-        public IActionResult CreatePost(Post postare) // metoda apelata cand se da submit la formular
+        public async Task<IActionResult> CreatePost(Post postare, IFormFile Image) // metoda apelata cand se da submit la formular
         {
             // time and userId set automatically 
             postare.Time = DateTime.Now;
@@ -53,7 +53,54 @@ namespace OSSocial.Controllers
             // validare/ clear validation errors
             ModelState.Remove(nameof(postare.UserId));
             ModelState.Remove(nameof(postare.Time));
-            
+
+            if (Image != null && Image.Length > 0)
+            {
+                // info din articles app lab 9
+                // verif extensie
+                var allowedExtension = new[] { ".jpg", ".jpeg", ".png", ".gif", ".mp4", ".mov" };
+                var fileExtrension = Path.GetExtension(Image.FileName).ToLower();
+
+                if (!allowedExtension.Contains(fileExtrension))
+                {
+                    ModelState.AddModelError("Image", $"Image {fileExtrension} does not have the correct format. Media to be of an image (jpg, jpeg, png, gif) or a video (mp4,  mov)");
+                    return View(postare);
+                }
+                
+                // stocare cale
+                var webRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
+        
+                // Ensure folder exists
+                if (!Directory.Exists(webRootPath))
+                {
+                    Directory.CreateDirectory(webRootPath);
+                }
+                
+                var uniqueFileName = Guid.NewGuid().ToString() + "_" + Image.FileName;
+                
+                var filePath = Path.Combine(webRootPath, uniqueFileName); // local save path
+                var dbPath = "/images/" + uniqueFileName; // db save path
+                
+                // salvare fisier
+                using (var fileStream = new FileStream(filePath, System.IO.FileMode.Create))
+                {
+                    // await only used on async methods!
+                    await Image.CopyToAsync(fileStream);
+                }
+                
+                ModelState.Remove(nameof(postare.Media));
+                
+                postare.Media = dbPath;
+            }
+
+            // if (TryValidateModel(postare))
+            // {
+            //     db.Posts.Add(postare);
+            //     await db.SaveChanges();
+            //
+            //     return RedirectToAction("Feed");
+            // } 
+           
             try
             {
                 db.Posts.Add(postare);

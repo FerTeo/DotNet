@@ -28,8 +28,14 @@ namespace OSSocial.Models
         // keeps a list of all edit times -> including the time it was posted 
         // btw should be using IEnumerable(AN INTERFACE) for the DateTime because we should be able to iterate through it with foreach in the .cshtml file (i think that's how it works for now)
         
-        // mai trebuie adaugata ideea de postare a imaginilor/ video-urilor etc.
+        // pt postarea imaginilor/ video-urilor se tine minte doar calea catre fisier si in rest sunt in wwwroot
+        public string? Media { get; set; }
         
+        // // am vz ca in laborator nu era asta dar ajuta la afisarea mai usoara
+        // [NotMapped]
+        // public IFormFile? ImageFile { get; set; }
+        // // IFormFile = Represents a file sent with the HttpRequest.
+
         // foreign key-ul utilizatorului 
         public string UserId { get; set; } // string pt ca identity users maps to string
         

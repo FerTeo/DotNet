@@ -8,6 +8,23 @@
 <p>@ViewBag.Post.Content</p>
 <p>@ViewBag.Post.formattedTime</p>
 
+@if (!string.IsNullOrEmpty(@ViewBag.Post.Media))
+{
+    @* doar dacă nu e null, verificăm extensia *@
+    if (@ViewBag.Post.Media.EndsWith(".mp4") || @ViewBag.Post.Media.EndsWith(".mov"))
+    {
+        <video width="550" height="300" controls>
+            <source src="@ViewBag.Post.Media" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    }
+    else
+    {
+        @* dacă nu e video, e imagine *@
+        <img src="@ViewBag.Post.Media" alt="Article Image" style="width: 100%; max-width: 550px; height: auto; object-fit: cover; border-radius: 10px;" />
+    }
+}
+
 <br/>
 <form method="post" action="/Post/Delete/@ViewBag.Post.Id">
     <button type="submit">Delete Post</button>
