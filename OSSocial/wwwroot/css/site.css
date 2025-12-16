@@ -43,7 +43,8 @@ body {
   /*background-image: url("../images/WindowsXpWallpaper.jpg");*/
   /*background-repeat: no-repeat;*/
   /*background-size: cover;*/
-  color: white;
+  /* Color was white which made text invisible on a white background when the video didn't load */
+  color: red; /* default Bootstrap body color (dark) */
 }
 
 .form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {

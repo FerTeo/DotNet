@@ -24,7 +24,12 @@
                         <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-dark" asp-area="" asp-controller="Post" asp-action="Feed">Posts Feed</a>
+                        <a class="nav-link text-dark" asp-area="" asp-controller="Post" asp-action="Feed">Posts</a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" asp-action="" asp-controller="Profiles" asp-action="Index">Users</a>
+
                     </li>
                 </ul>
                 <partial name="_LoginPartial"/>
@@ -33,7 +38,7 @@
     </nav>
 </header>
 <video autoplay muted loop id="backgroundVideo">
-    <source src="../assets/snow.mp4" type="video/mp4"/>
+    <source src="~/assets/snow.mp4" type="video/mp4"/>
 </video>
 <div class="container">
     <main role="main" class="pb-3">
