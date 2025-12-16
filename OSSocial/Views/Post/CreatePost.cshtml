@@ -1,9 +1,11 @@
+@model OSSocial.Models.Post
+
 @{
     ViewData["Title"] = "Add new post";
 }
-<h1>@ViewData["Title"]</h1>
+<h1 class="text-white">@ViewData["Title"]</h1>
 
-<form method="post" action="/Post/CreatePost">
+<form method="post" action="/Post/CreatePost" class="text-white" enctype="multipart/form-data">
     <label>Title</label>
     <br/>
     <input type="text" name="Title"/>
@@ -14,10 +16,15 @@
     <input type="text" name="content"/>
     <br/>
     
+    <label>Upload Photo</label>
+    <br/>
+    <input type="file" name="Image" class="form-control" accept="image/*,video/*" />
+    <br/>
+    
     <br/>
     <br/>
     <button type="submit">Post!</button>
 </form>
 
 
-<p>In progress</p>
+<p class="text-white">In progress</p>

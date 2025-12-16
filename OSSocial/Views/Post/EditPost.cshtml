@@ -9,10 +9,38 @@
     @* value inseamna ca adauga valoarea "implicita" care deja era in baza de date *@
     <input type="text" name="Title" value="@ViewBag.Post.Title"/> 
     <br/>
+    <br/>
     
     <label>Content</label>
     <br/>
     <input type="text" name="content" value="@ViewBag.Post.Content"/>
+    <br/>
+    <br/>
+    
+    @if (!string.IsNullOrEmpty(@ViewBag.Post.Media))
+    {
+        <p>Current media attached to post:</p>
+        <br/>
+        @* doar dacă nu e null, verificăm extensia *@
+        if (@ViewBag.Post.Media.EndsWith(".mp4") || @ViewBag.Post.Media.EndsWith(".mov"))
+        {
+            <video width="550" height="300" controls>
+                <source src="@ViewBag.Post.Media" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        }
+        else
+        {
+            @* dacă nu e video, e imagine *@
+            <img src="@ViewBag.Post.Media" alt="Article Image" style="width: 100%; max-width: 550px; height: auto; object-fit: cover; border-radius: 10px;" />
+        }
+    }
+    <br/>
+    <br/>
+    
+    <label>Change Photo</label>
+    <br/>
+    <input type="file" name="Image" class="form-control" accept="image/*,video/*" />
     <br/>
     
     <br/>
