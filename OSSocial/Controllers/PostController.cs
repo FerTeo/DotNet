@@ -6,6 +6,7 @@ using OSSocial.Models;
 
 namespace OSSocial.Controllers
 {
+    [Route("Post")]
     public class PostController : Controller
     {
         private readonly ApplicationDbContext db;
@@ -15,6 +16,13 @@ namespace OSSocial.Controllers
             db = context;
         }
 
+        [HttpGet("")]
+        public IActionResult Index()
+        {
+            return RedirectToAction("Feed");
+        }
+
+        [HttpGet("Feed")] // GET /Post/Feed
         public IActionResult Feed()
         {
             // practic functie de index dar in social media terms 
@@ -27,20 +35,25 @@ namespace OSSocial.Controllers
             return View();
         }
 
+        [HttpGet("Details/{id}")] // GET /Post/Details/5
         public IActionResult Details(int id)
         {
-            Post postare = db.Posts.Find(id);
-            ViewBag.Post = postare;
-            return View();
+            Post? postare = db.Posts.Find(id);
+            if (postare == null)
+            {
+                return NotFound();
+            }
+            return View(postare);
         }
 
         [Authorize] // necesar ca user-ul sa fie logat, altfel nu poate crea o postare
+        [HttpGet("CreatePost")] // GET /Post/CreatePost - returneaza formularul
         public IActionResult CreatePost() // ar tb sa returneze un formular
         {
             return View();
         }
 
-        [HttpPost]
+        [HttpPost("CreatePost")]
         [Authorize] // te trimite direct la login daca nu esti logat!!
         public async Task<IActionResult> CreatePost(Post postare, IFormFile Image) // metoda apelata cand se da submit la formular
         {
@@ -114,19 +127,28 @@ namespace OSSocial.Controllers
         }
 
         [Authorize]
+        [HttpGet("EditPost/{id}")] // GET /Post/EditPost/5
         public IActionResult EditPost(int id)
         {
-            Post postare = db.Posts.Find(id);
+            Post? postare = db.Posts.Find(id);
+            if (postare == null)
+            {
+                return NotFound();
+            }
             ViewBag.Post = postare;
-            return View();
+            return View(postare);
         }
 
         
-        [HttpPost]
+        [HttpPost("EditPost/{id}")]
         [Authorize]
         public IActionResult EditPost(int id, Post postareFormular)
         {
-            Post postareModif = db.Posts.Find(id);
+            Post? postareModif = db.Posts.Find(id);
+            if (postareModif == null)
+            {
+                return NotFound();
+            }
 
             // dupa ce sunt toate rolurile configurate 100% corect si ideea de admin implementata
             // if care verifica daca modificarile provin de la acelasi user care a creat proiectul 
@@ -154,10 +176,14 @@ namespace OSSocial.Controllers
             }
         }
 
-        [HttpPost]
+        [HttpPost("Delete/{id}")]
         public IActionResult Delete(int id)
         {
-            Post postare = db.Posts.Find(id);
+            Post? postare = db.Posts.Find(id);
+            if (postare == null)
+            {
+                return NotFound();
+            }
             db.Posts.Remove(postare);
             db.SaveChanges();
             
@@ -166,4 +192,3 @@ namespace OSSocial.Controllers
 
     }
 }
-

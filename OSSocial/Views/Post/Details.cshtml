@@ -1,12 +1,13 @@
+@model OSSocial.Models.Post
 @{
     ViewData["Title"] = "See post details";
 }
 <h1>@ViewData["Title"]</h1>
 
 <br>
-<p>@ViewBag.Post.Title</p>
-<p>@ViewBag.Post.Content</p>
-<p>@ViewBag.Post.formattedTime</p>
+<p>@Model.Title</p>
+<p>@Model.Content</p>
+<p>@Model.formattedTime</p>
 
 @if (!string.IsNullOrEmpty(@ViewBag.Post.Media))
 {
@@ -26,13 +27,14 @@
 }
 
 <br/>
-<form method="post" action="/Post/Delete/@ViewBag.Post.Id">
-    <button type="submit">Delete Post</button>
+<form asp-action="Delete" asp-controller="Post" asp-route-id="@Model.Id" method="post">
+    @Html.AntiForgeryToken()
+    <button type="submit" class="btn btn-danger">Delete Post</button>
 </form>
 
 <br/>
 
-<a href="/Post/Feed">Return to feed</a>
+<a asp-controller="Post" asp-action="Feed">Return to feed</a>
 
 <br/>
 

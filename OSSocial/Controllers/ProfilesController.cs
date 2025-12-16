@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace OSSocial.Controllers;
 
+[Route("Profiles")]
 public class ProfilesController : Controller
 {
     private readonly ApplicationDbContext db;
@@ -28,8 +29,9 @@ public class ProfilesController : Controller
     }
     
     
-    //afisarea utilizatorilor
+    // /Profiles/Index
     [HttpGet]
+    //afisarea utilizatorilor
     public IActionResult Index()
     {
         var users = db.Users.OrderBy(u => u.UserName);
@@ -39,8 +41,10 @@ public class ProfilesController : Controller
         return View();
     }
     
-    //profilul unui utilizator
+    
+    // /Profiles/Show/admin
     [HttpGet("Show/{username}")]
+    //profilul unui utilizator
     public async Task<ActionResult> ShowAsync(string username)
     {
         ApplicationUser? user = await db.Users
