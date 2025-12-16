@@ -9,20 +9,20 @@
 <p>@Model.Content</p>
 <p>@Model.formattedTime</p>
 
-@if (!string.IsNullOrEmpty(@ViewBag.Post.Media))
+@if (!string.IsNullOrEmpty(Model.Media))
 {
     @* doar dacă nu e null, verificăm extensia *@
-    if (@ViewBag.Post.Media.EndsWith(".mp4") || @ViewBag.Post.Media.EndsWith(".mov"))
+    if (Model.Media.EndsWith(".mp4", StringComparison.OrdinalIgnoreCase) || Model.Media.EndsWith(".mov", StringComparison.OrdinalIgnoreCase))
     {
         <video width="550" height="300" controls>
-            <source src="@ViewBag.Post.Media" type="video/mp4">
+            <source src="@Model.Media" type="video/mp4">
             Your browser does not support the video tag.
         </video>
     }
     else
     {
         @* dacă nu e video, e imagine *@
-        <img src="@ViewBag.Post.Media" alt="Article Image" style="width: 100%; max-width: 550px; height: auto; object-fit: cover; border-radius: 10px;" />
+        <img src="@Model.Media" alt="Article Image" style="width: 100%; max-width: 550px; height: auto; object-fit: cover; border-radius: 10px;" />
     }
 }
 

@@ -1,11 +1,11 @@
 @{
     ViewData["Title"] = "Personal Feed";
 }
-<h1 class="text-white">@ViewData["Title"]</h1>
+<h1 >@ViewData["Title"]</h1>
 
 @foreach (var postare in ViewBag.Posts)
 {
-    <div class="text-white">
+    <div >
         <p >@postare.Title</p>
         <p>@postare.Content</p>
         <p>@postare.formattedTime</p>
@@ -28,15 +28,15 @@
         }
         <br/>
         
-        <a href="/Post/Details/@postare.Id" class="text-white">Show post details</a>
+        <a href="/Post/Details/@postare.Id" >Show post details</a>
         <br/>
-        <a href="/Post/EditPost/@postare.Id" class="text-white">Edit post</a>
+        <a href="/Post/EditPost/@postare.Id" >Edit post</a>
         <hr/>    
     </div>
 }
 
-<a href="/Post/CreatePost" class="text-white">Add a new post</a>
+<a href="/Post/CreatePost" >Add a new post</a>
 
 <br/>
 
-<p class="text-white">Work in progress!</p>
+<p >Work in progress!</p>
