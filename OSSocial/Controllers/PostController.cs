@@ -135,6 +135,14 @@ namespace OSSocial.Controllers
             {
                 return NotFound();
             }
+            
+            // if care verifica daca modificarile provin de la acelasi user care a creat proiectul 
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (postare.UserId != currentUserId)
+            {
+                return Forbid();
+            }
+            
             ViewBag.Post = postare;
             return View(postare);
         }
@@ -149,15 +157,6 @@ namespace OSSocial.Controllers
             {
                 return NotFound();
             }
-
-            // dupa ce sunt toate rolurile configurate 100% corect si ideea de admin implementata
-            // if care verifica daca modificarile provin de la acelasi user care a creat proiectul 
-            //
-            // var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            // if (postareFormular.UserId != currentUserId)
-            // {
-            //     return Forbid();
-            // }
             
             try
             {
@@ -184,6 +183,14 @@ namespace OSSocial.Controllers
             {
                 return NotFound();
             }
+            
+            // if care verifica daca modificarile provin de la acelasi user care a creat proiectul 
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (postare.UserId != currentUserId && !User.IsInRole("Admin"))
+            {
+                return Forbid();
+            }
+            
             db.Posts.Remove(postare);
             db.SaveChanges();
             

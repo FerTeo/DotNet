@@ -130,6 +130,37 @@ namespace OSSocial.Models
             );
         }
         
+        private static void SeedPosts(ApplicationDbContext context)
+        {
+            context.Posts.AddRange
+            (
+                new Post
+                {
+                    Title = "Haircut Inspo",
+                    Content = "cool haircut/ hairstyle idea",
+                    Time = DateTime.Now,
+                    UserId = "8e445865-a24d-4543-a6c6-9443d048cdb0", // admin
+                    Media = "/images/133cb2fc-5dc7-48a3-86d7-2d66c887a85f_hair.jpg"
+                },
+                new Post
+                {
+                    Title = "Cool outfit idea",
+                    Content = "ce tare e fitul asta (lowk emo autumn/ winter vibe)",
+                    Time = DateTime.Now,
+                    UserId = "8e445865-a24d-4543-a6c6-9443d048cdb1", // editor
+                    Media = "/images/08652ee4-a138-4718-a63d-48d8aa6c5ad6_altfit1.jpg"
+                },
+                new Post
+                {
+                    Title = "Yo",
+                    Content = "Average fernando trip photos",
+                    Time = DateTime.Now,
+                    UserId = "8e445865-a24d-4543-a6c6-9443d048cdb3", // fernando lol (easter egg daca verifici vreodata seed data-ul asta rege)
+                    Media = "/images/76928316-7c7a-4ae7-bc17-f9ff26600f71_IMG_0347.JPG"
+                }
+            );
+        }
+        
         // RESETARE BD
         private static void ResetDatabase(ApplicationDbContext context)
         {
@@ -161,11 +192,13 @@ namespace OSSocial.Models
                     return; // baza de date contine deja roluri
                 }
 
+                
 
                 
                 SeedRoles(context);
                 SeedUsers(context);
                 SeedUserRoles(context);
+                SeedPosts(context);
         
                 context.SaveChanges();
             }

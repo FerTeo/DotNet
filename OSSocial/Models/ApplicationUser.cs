@@ -14,11 +14,12 @@ namespace OSSocial.Models
         
         public bool? IsPrivate { get; set; }
         
-        
         // un user poate posta mai multe postari
-        //TODO
-        // public virtual ICollection<Posts> Posts { get; set; }
-
+        public virtual ICollection<Post>? Posts { get; set; }
+        
+        // lista ce contine toate postarile din baza de date (de forma id_postare - titlu postare)
+        [NotMapped]
+        public IEnumerable<SelectListItem>? UsedListPosts { get; set;}
         // variabila in care vom retine rolurile existente in baza de date
         // pentru popularea unui dropdown list
         [NotMapped]
