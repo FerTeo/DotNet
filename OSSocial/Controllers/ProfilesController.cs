@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using OSSocial.Models;
 using OSSocial.Data;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace OSSocial.Controllers;
@@ -28,7 +29,6 @@ public class ProfilesController : Controller
         _roleManager = roleManager;
     }
     
-    
     // /Profiles/Index
     [HttpGet]
     //afisarea utilizatorilor
@@ -48,8 +48,9 @@ public class ProfilesController : Controller
     public async Task<ActionResult> ShowAsync(string username)
     {
         ApplicationUser? user = await db.Users
-            .FirstOrDefaultAsync(u=>u.NormalizedUserName == username.ToUpper());
-
+            .Include(u => u.Posts) 
+            .FirstOrDefaultAsync(u => u.NormalizedUserName == username.ToUpper());
+        
         if (user is null)
         {
             return NotFound();
@@ -57,7 +58,9 @@ public class ProfilesController : Controller
         else
         {
             var roles = await _userManager.GetRolesAsync(user);
-                 
+
+            // pentru a afisa postarile utilizatorului pe profilul acestuia
+            
             ViewBag.Roles = roles;
 
             ViewBag.UserCurent = await _userManager.GetUserAsync(User);
