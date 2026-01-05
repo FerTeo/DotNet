@@ -38,4 +38,110 @@
 
 <br/>
 
-<p>In progress</p>
+
+@foreach (var comm in Model.Comments)
+{
+    <div class="container">
+        <div class="row">
+            <div class="col-md-2"></div>
+
+            <div class="col-md-8">
+
+                <div>
+
+                    <p>@comm.Content</p>
+                    <small>@comm.DateCreated</small>
+                    <strong><i class="bi bi-person"> @comm.User.UserName</i></strong>
+
+                    @* Afisare eticheta sentiment - vizibila doar pentru Admin *@
+                    @* @if (ViewBag.EsteAdmin == true && comm.SentimentLabel != null) *@
+                    @* { *@
+                    @*     var badgeClass = comm.SentimentLabel switch *@
+                    @*     { *@
+                    @*         "positive" => "bg-success", *@
+                    @*         "negative" => "bg-danger", *@
+                    @*         _ => "bg-secondary" *@
+                    @*     }; *@
+                    @*     var sentimentIcon = comm.SentimentLabel switch *@
+                    @*     { *@
+                    @*         "positive" => "bi-emoji-smile", *@
+                    @*         "negative" => "bi-emoji-frown", *@
+                    @*         _ => "bi-emoji-neutral" *@
+                    @*     }; *@
+                    @*     <span class="badge @badgeClass ms-2"> *@
+                    @*         <i class="bi @sentimentIcon"></i> *@
+                    @*         @comm.SentimentLabel *@
+                    @*         (@(comm.SentimentConfidence?.ToString("P0"))) *@
+                    @*     </span> *@
+                    @* } *@
+                </div>
+                <br>
+
+                @if (comm.UserId == ViewBag.CurrentUserId || ViewBag.EsteAdmin == true)
+                {
+                    <div class="d-flex">
+                        <div>
+                            <a class="btn btn-outline-primary" asp-controller="Comments" asp-action="Edit" asp-route-id="@comm.Id">
+                                <i class="bi bi-pencil-square"></i> Editeaza
+                            </a>
+
+                        </div>
+                        <div>
+                            <form method="post" asp-controller="Comments" asp-action="Delete" asp-route-id="@comm.Id">
+
+                                <button class="btn btn-outline-danger" type="submit"><i class="bi bi-trash"></i>Sterge</button>
+
+                            </form>
+                        </div>
+                    </div>
+                }
+
+                <br />
+
+            </div>
+
+            <div class="col-md-2"></div>
+
+        </div>
+
+    </div>
+}
+
+
+@* Afisarea formularului in care se poate adauga un comentariu
+    Doar pt utilizator logat *@
+@if (User.Identity.IsAuthenticated)
+{
+    <div class="container">
+        <div class="row">
+            <div class="col-md-2"></div>
+            <div class="col-md-8">
+                <div class="card">
+                    <form method="post" asp-controller="Comments" asp-action="New">
+                        <div class="card-body">
+
+                            <input type="hidden" name="PostId" value="@Model.Id" />
+
+                            <label>Continut comentariu</label>
+                            <br />
+
+                            <textarea class="form-control" name="Content"></textarea>
+
+                            <span asp-validation-for="Content" class="text-danger"></span>
+                            <br /><br />
+                            
+                            <button class="btn btn-success " type="submit">Adauga comentariul</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="col-md-2"></div>
+        </div>
+    </div>
+}
+else
+{
+    <div @* class="text-center mt-4"*@> 
+        <p>You must be logged in to leave a comment.</p>
+    </div>
+}

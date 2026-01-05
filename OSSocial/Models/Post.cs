@@ -40,5 +40,11 @@ namespace OSSocial.Models
         public string UserId { get; set; } // string pt ca identity users maps to string
         
         public virtual ApplicationUser? User { get; set; }
+        
+        // un articol poate avea o colectie de comentarii
+        public virtual ICollection<Comment> Comments { get; set; } = [];
+
     }    
 }
+
+
