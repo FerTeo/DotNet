@@ -121,7 +121,7 @@ namespace OSSocial.Areas.Identity.Pages.Account.Manage
 
             await _signInManager.RefreshSignInAsync(user);
             TempData["StatusMessage"] = "Profile updated";
-            return RedirectToPage("./Index");
+            return RedirectToPage("./CustomizeProfile");
         }
     }
 }

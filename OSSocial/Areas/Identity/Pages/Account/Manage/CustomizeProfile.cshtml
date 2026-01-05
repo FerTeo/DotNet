@@ -3,41 +3,59 @@
 @{
     ViewData["Title"] = "Customize profile";
 }
-<h4>Customize profile</h4>
-
+<h3>Customize profile</h3>
+<link rel="stylesheet" href="~/css/profile_picture.css" />
 <form method="post" enctype="multipart/form-data" class="form">
     <div class="mb-3">
-        <label class="form-label">Current image</label>
+        
         @if (!string.IsNullOrEmpty(Model.CurrentImageUrl))
         {
-            <div>
-                <img src="@Model.CurrentImageUrl" alt="profile" style="max-height:140px;" />
+            <label class="form-label">Current imagee</label>
+            <div style=" display: flex;align-items: center;justify-content:space-around; padding: 3px; background-color: grey;" >
+
+                <div class="avatar-circle">
+                    <img src="@Model.CurrentImageUrl"  class="avatar-img" alt="profile";  />
+                </div>
+                <br>
+            
+                <div class="mb-3">
+                    <input asp-for="Input.ProfileImage" type="file" class="form-control"
+                           style="width:80%; border-radius:35px; display:inline-block; vertical-align:middle; text-align: center; align-self: center;" />
+                    <span asp-validation-for="Input.ProfileImage" class="text-danger"></span>
+                </div>
             </div>
         }
         else
         {
-            <div>No image</div>
+            <div class="mb-3">
+                <label asp-for="Input.ProfileImage" class="form-label"><b>Add a profile picture</b></label>
+                <input asp-for="Input.ProfileImage" type="file" class="form-control"/>
+                <span asp-validation-for="Input.ProfileImage" class="text-danger"></span>
+            </div>
         }
     </div>
 
-    <div class="mb-3">
-        <label asp-for="Input.ProfileImage" class="form-label">New profile image</label>
-        <input asp-for="Input.ProfileImage" type="file" class="form-control" />
-        <span asp-validation-for="Input.ProfileImage" class="text-danger"></span>
-    </div>
+    <br/>    
 
     <div class="mb-3">
-        <label asp-for="Input.Bio" class="form-label"></label>
-        <textarea asp-for="Input.Bio" class="form-control"></textarea>
+        <label asp-for="Input.Bio" class="form-label"><b>Bio</b></label>
+        <textarea asp-for="Input.Bio" class="form-control" style="border-radius: 15px; width: 80%; height: auto"></textarea>
         <span asp-validation-for="Input.Bio" class="text-danger"></span>
     </div>
 
+    <br/>
+    
     <div class="form-check mb-3">
         <input asp-for="Input.IsPrivate" class="form-check-input" />
         <label asp-for="Input.IsPrivate" class="form-check-label">Private account</label>
     </div>
 
+    <br/>
+    
     <button type="submit" class="btn btn-primary">Save</button>
+    
+    
+    <br/><br/><br/>
 </form>
 
 @section Scripts {
