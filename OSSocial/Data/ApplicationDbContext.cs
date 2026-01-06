@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using OSSocial.Models;
 
@@ -12,7 +12,10 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
     }
     
+    
     public DbSet<ApplicationUser> ApplicationUsers { get; set; }
+    
+    public DbSet<Follow> Follows { get; set; }
 
     public DbSet<Post> Posts { get; set; }
     
@@ -47,6 +50,22 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .HasOne(gm => gm.Group)
             .WithMany(u => u.Members)
             .HasForeignKey(gm => gm.GroupId);
+        
+        builder.Entity<Follow>()
+            .HasOne(f=>f.Follower)
+            .WithMany(u=>u.Following)
+            .HasForeignKey(f=>f.FollowerId)
+            .OnDelete(DeleteBehavior.Restrict);
+        
+        builder.Entity<Follow>()
+            .HasOne(f=>f.Followee)
+            .WithMany(u=>u.Followers)
+            .HasForeignKey(f=>f.FolloweeId)
+            .OnDelete(DeleteBehavior.Restrict);
+        
+        builder.Entity<Follow>()
+            .HasIndex(f=>new{f.FollowerId,f.FolloweeId})
+            .IsUnique();
         
         // Configure string properties for MySQL compatibility
         foreach (var entityType in builder.Model.GetEntityTypes())

@@ -73,37 +73,75 @@ public class ProfilesController : Controller
     
     
     // /Profiles/Show/admin
-    [HttpGet("Show/{username}")]
     //profilul unui utilizator
+    [HttpGet("Show/{username}")]
     public async Task<ActionResult> ShowAsync(string username)
     {
-        ApplicationUser? user = await db.ApplicationUsers
+        ApplicationUser? targetUser = await db.ApplicationUsers
             .Include(u => u.Posts) 
             .FirstOrDefaultAsync(u => u.NormalizedUserName == username.ToUpper());
-        
-        if (user is null)
+
+        if (targetUser is null)
         {
-            return NotFound();
+            TempData["Error"] = "User not found.";
+            return RedirectToAction("Index", "Profiles");
         }
-        else
+
+        // utilizatorul curent (poate fi null daca nu e intregistart!)
+        var currentUser = await _userManager.GetUserAsync(User);
+
+        // numarul de urmaritori si urmarii
+        var followersCount = await db.Follows.CountAsync(f => f.FolloweeId == targetUser.Id && f.Status == FollowStatus.Accepted);
+        var followingCount = await db.Follows.CountAsync(f => f.FollowerId == targetUser.Id && f.Status == FollowStatus.Accepted);
+
+        // determinam realtia dintre utilizatorul curent si profilul
+        bool isFollowing = false;
+        bool isPending = false;
+        bool showFollowButton = false;
+
+        // daca nu e un user care isi vizualizeaza propriul profil 
+        if (currentUser != null && currentUser.Id != targetUser.Id)
         {
-            var roles = await _userManager.GetRolesAsync(user);
+            showFollowButton = true;
+            var relationship = await db.Follows
+                .FirstOrDefaultAsync(f => f.FollowerId == currentUser.Id 
+                                          && f.FolloweeId == targetUser.Id);
+            if (relationship != null)
+            {
+                if (relationship.Status == FollowStatus.Accepted)
+                {
+                    isFollowing = true;
+                }
 
-            // pentru a afisa postarile utilizatorului pe profilul acestuia
-            
-            ViewBag.Roles = roles;
+                if (relationship.Status == FollowStatus.Pending)
+                {
+                    isPending = true;
+                }
+            }
+        }
+        
+        
+        //verificam daca se pot vedea postarile
+        bool ShowPosts = false;
 
-            ViewBag.UserCurent = await _userManager.GetUserAsync(User);
+        if (isFollowing == true || targetUser.IsPrivate == false || targetUser==currentUser)
+        {
+            ShowPosts = true;
+        }
+        
+        
 
-            return View(user);
-        } 
+        var roles = await _userManager.GetRolesAsync(targetUser);
+
+        ViewBag.Roles = roles;
+        ViewBag.UserCurent = currentUser;
+        ViewBag.FollowersCount = followersCount;
+        ViewBag.FollowingCount = followingCount;
+        ViewBag.IsFollowing = isFollowing;
+        ViewBag.IsPending = isPending;
+        ViewBag.ShowFollowButton = showFollowButton;
+        ViewBag.ShowPosts = ShowPosts;
+
+        return View(targetUser);
     }
-    
-    
-    
-    
-    
-    
-    
-
 }

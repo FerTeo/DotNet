@@ -9,12 +9,13 @@ namespace OSSocial.Models
         
         // atribute suplimentare adaugate pentru user
         public string? DisplayName { get; set; }
-        
         public string? Bio { get; set; }
-        
-        public bool? IsPrivate { get; set; }
-        
+        public bool? IsPrivate { get; set; } = false;
         public string? ProfileImageUrl { get; set; }
+        
+        
+        public ICollection<Follow> Followers { get; set; } = new List<Follow>();
+        public ICollection<Follow> Following { get; set; } = new List<Follow>();
         
         // un user poate posta mai multe postari
         public virtual ICollection<Post>? Posts { get; set; }
