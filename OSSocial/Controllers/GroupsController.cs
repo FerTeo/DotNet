@@ -184,7 +184,7 @@ namespace OSSocial.Controllers
         
         // functionalitatea propriu-zisa de a da join intr-un grup
         // poti da join unui grup doar daca esti logat
-        [HttpPost]
+        [HttpPost("JoinGroup")]
         [Authorize(Roles =  "Admin, User, Editor")]
         public IActionResult JoinGroup(int GroupId)
         {
@@ -214,6 +214,80 @@ namespace OSSocial.Controllers
             TempData["message"] = "You have joined the group!";
             TempData["messageType"] = "alert-success";
             return RedirectToAction("GroupProfile", new { id = GroupId });
+        }
+
+        [HttpPost("LeaveGroup")]
+        [Authorize(Roles = "Admin, User, Editor")]
+        public IActionResult LeaveGroup(int GroupId)
+        {
+            var group = db.Groups.Find(GroupId);
+
+            if (group == null)
+            {
+                TempData["message"] = "Group not found";
+                TempData["messageType"] = "alert-danger";
+                return RedirectToAction("Explore");
+            }
+            
+            var currentUserId = _userManager.GetUserId(User);
+            
+            // owner-ul nu iese din grup, il sterge
+            var isOwner = group.UserId == currentUserId;
+            
+            // un membru ar trebui sa poata iesi din grup normal
+            var membership = db.GroupMembers.FirstOrDefault(gm => gm.GroupId == GroupId && gm.UserId == currentUserId);
+
+            if (membership == null)
+            {
+                TempData["message"] = "You are not a member of this group.";
+                TempData["messageType"] = "alert-danger";
+                return RedirectToAction("GroupProfile", new { id = GroupId });
+            }
+            else
+            if (isOwner) // daca e owner, sterge grupul
+            {
+                // ca sa stergi un entry din tabel MAI INTAI STERGI TOT CE E LEGAT DE EL
+                // (ma intrebam de ce imi da eroare ...)
+                
+                // sterge postarile asociate grupului
+                var groupPosts = db.Posts.Where(p => p.GroupId == GroupId).ToList();
+                if (groupPosts.Any())
+                {
+                    db.Posts.RemoveRange(groupPosts);
+                }
+
+                // sterge membrii grupului (intrarile din tabela asociativa GroupMembers)
+                var groupMembers = db.GroupMembers.Where(gm => gm.GroupId == GroupId).ToList();
+                if (groupMembers.Any())
+                {
+                    db.GroupMembers.RemoveRange(groupMembers);
+                }
+                
+                db.Groups.Remove(group);
+                db.SaveChanges();   
+                
+                TempData["message"] = "Group deleted :(";
+                return RedirectToAction("Explore");
+            }
+            else // doar membru simplu
+            {
+                db.GroupMembers.Remove(membership);
+                db.SaveChanges();
+                
+                TempData["message"] = "Officially left the group...";
+            }
+            
+            // can see public groups after leaving
+            // grupurile private tho nu pot fi vazute 
+            if (group.IsPublic)
+            {
+                return RedirectToAction("GroupProfile", new { id = GroupId });
+            }
+            else
+            {
+                return RedirectToAction("Explore");
+            }
+            
         }
         
         // ca sa afisezi butoane de editare/ stergere in view
