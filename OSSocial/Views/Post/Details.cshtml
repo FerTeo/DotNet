@@ -7,7 +7,7 @@
 <br>
 <p>@Model.Title</p>
 <p>@Model.Content</p>
-<p>@Model.formattedTime</p>
+<p>@Model.Time</p>
 
 @if (!string.IsNullOrEmpty(Model.Media))
 {
@@ -41,18 +41,21 @@
 
 @foreach (var comm in Model.Comments)
 {
-    <div class="container">
+    <div class="container" style="max-width: 40%;">
         <div class="row">
             <div class="col-md-2"></div>
 
             <div class="col-md-8">
 
-                <div>
-
+                <div style="margin-block: auto; padding: 10px; border: 1px solid #ccc; border-radius: 5px; right: auto; left: auto" >
+                    <div>
+                        <strong><i class="bi bi-person"> @comm.User.UserName</i></strong>
+                    </div>
+                    <br/>
+                    
                     <p>@comm.Content</p>
                     <small>@comm.DateCreated</small>
-                    <strong><i class="bi bi-person"> @comm.User.UserName</i></strong>
-
+                    
                     @* Afisare eticheta sentiment - vizibila doar pentru Admin *@
                     @* @if (ViewBag.EsteAdmin == true && comm.SentimentLabel != null) *@
                     @* { *@
@@ -122,7 +125,7 @@
 
                             <input type="hidden" name="PostId" value="@Model.Id" />
 
-                            <label>Continut comentariu</label>
+                            <label>What do you want to say? :3</label>
                             <br />
 
                             <textarea class="form-control" name="Content"></textarea>
@@ -130,7 +133,7 @@
                             <span asp-validation-for="Content" class="text-danger"></span>
                             <br /><br />
                             
-                            <button class="btn btn-success " type="submit">Adauga comentariul</button>
+                            <button class="btn btn-success " type="submit">Add comment!</button>
                         </div>
                     </form>
                 </div>
