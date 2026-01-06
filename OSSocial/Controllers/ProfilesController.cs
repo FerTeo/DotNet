@@ -77,7 +77,7 @@ public class ProfilesController : Controller
     [HttpGet("Show/{username}")]
     public async Task<ActionResult> ShowAsync(string username)
     {
-        ApplicationUser? user = await db.ApplicationUsers
+        ApplicationUser? targetUser = await db.ApplicationUsers
             .Include(u => u.Posts) 
             .FirstOrDefaultAsync(u => u.NormalizedUserName == username.ToUpper());
 
@@ -144,5 +144,4 @@ public class ProfilesController : Controller
 
         return View(targetUser);
     }
-
 }
