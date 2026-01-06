@@ -10,6 +10,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         options)
         : base(options)
     {
+        //TODO
     }
     
     
@@ -20,6 +21,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Post> Posts { get; set; }
     
     public DbSet<Comment> Comments { get; set; }
+    
+    public DbSet<Reaction> Reactions { get; set; }
+    
     
 
 

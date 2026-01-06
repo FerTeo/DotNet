@@ -43,6 +43,10 @@ namespace OSSocial.Models
         
         // un articol poate avea o colectie de comentarii
         public virtual ICollection<Comment> Comments { get; set; } = [];
+        
+        //un articol poate avea o colectie de comentarii
+        
+        public virtual ICollection<Reaction> Reactions { get; set; } = [];
 
     }    
 }
