@@ -1,0 +1,108 @@
+@using OSSocial.Data
+@using Microsoft.AspNetCore.Identity
+@inject ApplicationDbContext Db
+@inject UserManager<ApplicationUser> UserManager
+@model int
+
+@{
+    var postId = Model;
+    var totalLikes = Db.Reactions.Count(r => r.PostId == postId);
+    var liked = false;
+
+    if (User.Identity.IsAuthenticated)
+    {
+        var userId = UserManager.GetUserId(User);
+        liked = Db.Reactions.Any(r => r.PostId == postId && r.UserId == userId);
+    }
+}
+
+<form id="reaction-form-@postId" class="d-inline" method="post" asp-controller="Reaction" asp-action="Toggle">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="postId" value="@postId" />
+    <button type="submit" class="btn btn-link p-0" style="border: none; background: none;" aria-label="Like">
+        @if (liked)
+        {
+            <!-- use external filled heart and outline SVG files -->
+            <img class="reaction-filled" src="@(Url.Content("~/assets/icons/heart-fill.svg"))" width="28" height="28" alt="Liked" />
+            <img class="reaction-outline d-none" src="@(Url.Content("~/assets/icons/heart.svg"))" width="28" height="28" alt="Not liked" />
+        }
+        else
+        {
+            <!-- use external outline and filled heart SVG files -->
+            <img class="reaction-filled d-none" src="@(Url.Content("~/assets/icons/heart-fill.svg"))" width="28" height="28" alt="Liked" />
+            <img class="reaction-outline" src="@(Url.Content("~/assets/icons/heart.svg"))" width="28" height="28" alt="Not liked" />
+        }
+    </button>
+</form>
+
+<span id="reaction-count-@postId" class="ms-2">@totalLikes</span>
+
+<script>
+(function() {
+    // closure per partial instance
+    const postId = @postId;
+    const form = document.getElementById('reaction-form-' + postId);
+    if (!form) return;
+
+    // initial liked state from server
+    let liked = @liked.ToString().ToLower();
+
+    function setVisualLiked(isLiked) {
+        const filled = form.querySelector('.reaction-filled');
+        const outline = form.querySelector('.reaction-outline');
+        if (filled && outline) {
+            if (isLiked) {
+                filled.classList.remove('d-none');
+                outline.classList.add('d-none');
+            } else {
+                filled.classList.add('d-none');
+                outline.classList.remove('d-none');
+            }
+        }
+    }
+
+    setVisualLiked(liked);
+
+    form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(form);
+
+        try {
+            const res = await fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin'
+            });
+
+            if (res.status === 401) {
+                // not authenticated: redirect to login
+                window.location = '/Identity/Account/Login';
+                return;
+            }
+
+            // Toggle local liked state optimistically
+            liked = !liked;
+            setVisualLiked(liked);
+
+            // Refresh count from server to be accurate
+            const countsRes = await fetch('/Reaction/GetCounts?postId=' + postId, { credentials: 'same-origin' });
+            if (countsRes.ok) {
+                // controller returns Ok(number) - parse as text/number
+                const body = await countsRes.text();
+                const num = parseInt(body, 10);
+                if (!isNaN(num)) {
+                    const span = document.getElementById('reaction-count-' + postId);
+                    if (span) span.textContent = num;
+                }
+            }
+
+        } catch (err) {
+            console.error('Reaction toggle failed', err);
+            // revert optimistic UI on failure
+            liked = !liked;
+            setVisualLiked(liked);
+        }
+    });
+})();
+</script>

@@ -32,6 +32,8 @@
     <button type="submit" class="btn btn-danger">Delete Post</button>
 </form>
 
+@await Html.PartialAsync("_ReactionsPartial", Model.Id)
+
 <br/>
 
 <a asp-controller="Post" asp-action="Feed">Return to feed</a>
