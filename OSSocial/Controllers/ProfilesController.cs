@@ -34,9 +34,39 @@ public class ProfilesController : Controller
     //afisarea utilizatorilor
     public IActionResult Index()
     {
-        var users = db.Users.OrderBy(u => u.UserName);
-                      
-        ViewBag.UsersList = users;
+        // se ia termenul de cautare din url
+        var search = Convert.ToString(HttpContext.Request.Query["search"])?.Trim();
+
+        // se construieste interogarea de baza
+        var usersQuery = db.ApplicationUsers.AsQueryable();
+
+        // filtrez dupa numele de utilizator daca s-a dat un termen de cautare
+        if (!string.IsNullOrEmpty(search))
+        {
+            usersQuery = usersQuery.Where(u => u.UserName.Contains(search));
+        }
+
+        usersQuery = usersQuery.OrderBy(u => u.UserName);
+
+        // setare ViewBag-uri pentru View
+        ViewBag.SearchString = search;
+        
+        // lista propriu-zisa 
+        ViewBag.UsersList = usersQuery.ToList(); 
+
+        // Calculăm totalul pentru paginare (dacă vei implementa paginarea mai jos)
+        int totalUsers = usersQuery.Count();
+        ViewBag.TotalUsers = totalUsers;
+
+        // Logica pentru URL-ul de paginare
+        if (!string.IsNullOrEmpty(search))
+        {
+            ViewBag.PaginationBaseUrl = "/Profiles/Index/?search=" + search + "&page=";
+        }
+        else
+        {
+            ViewBag.PaginationBaseUrl = "/Profiles/Index/?page=";
+        }
 
         return View();
     }
@@ -47,7 +77,7 @@ public class ProfilesController : Controller
     //profilul unui utilizator
     public async Task<ActionResult> ShowAsync(string username)
     {
-        ApplicationUser? user = await db.Users
+        ApplicationUser? user = await db.ApplicationUsers
             .Include(u => u.Posts) 
             .FirstOrDefaultAsync(u => u.NormalizedUserName == username.ToUpper());
         

@@ -8,16 +8,36 @@
     <h2 class="p-3 rounded-3 text-center mb-5 alert @ViewBag.Alert">@ViewBag.Message</h2>
 }
 
-<br />
+@* Search engine yay *@
 
-@if (ViewBag.UsersList != null)
+<form method="GET">
+    <div class="input-group mb-3">
+        <input type="text" class="form-control" placeholder="Search by username" name="search"
+               value="@ViewBag.SearchString">
+        <button class="btn btn-outline-success" type="submit">Search</button>
+    </div>
+</form>
+
+@if (ViewBag.UsersList.Count == 0)
 {
-    foreach (OSSocial.Models.ApplicationUser user in ViewBag.UsersList)
+    <h3>No users found... maybe try another username?</h3>
+}
+else
+{
+    @foreach (var user in ViewBag.UsersList)
     {
         <div class="card">
-            <p>@user.UserName</p>
-            <a class="btn btn-dark" asp-controller="Profiles" asp-action="Show" asp-route-username="@user.UserName">Vizualizeaza profilul</a>
+
+            <partial name="UserInfo" model="user"></partial>
+
+            <a class="btn btn-success" asp-controller="Profiles" asp-action="Show" asp-route-username="@user.UserName">Show user profile</a>
+
         </div>
-        <br/>
+
+        <br />
+        <br />
     }
+
+    <br />
 }
+

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OSSocial.Data;
 using OSSocial.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace OSSocial.Controllers
 {
@@ -38,11 +39,29 @@ namespace OSSocial.Controllers
         [HttpGet("Details/{id}")] // GET /Post/Details/5
         public IActionResult Details(int id)
         {
-            Post? postare = db.Posts.Find(id);
+            Post? postare = db.Posts
+                .Include(p => p.User)                    // Include Post Author
+                .Include(p => p.Comments)                // Include Comments
+                .ThenInclude(c => c.User)                // Include Comment Authors
+                .FirstOrDefault(p => p.Id == id);
+            
             if (postare == null)
             {
                 return NotFound();
             }
+            
+            // se trimit catre view informatii despre user-ul care apeleaza Details
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                ViewBag.CurrentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                ViewBag.EsteAdmin = User.IsInRole("Admin");
+            }
+            else
+            {
+                ViewBag.CurrentUserId = null;
+                ViewBag.EsteAdmin = false;
+            }
+            
             return View(postare);
         }
 
