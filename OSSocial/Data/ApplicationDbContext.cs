@@ -14,9 +14,12 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     
     
     public DbSet<ApplicationUser> ApplicationUsers { get; set; }
+    
     public DbSet<Follow> Follows { get; set; }
 
     public DbSet<Post> Posts { get; set; }
+    
+    public DbSet<Comment> Comments { get; set; }
     
 
 
