@@ -5,7 +5,7 @@
 
 @foreach (var postare in ViewBag.Posts)
 {
-    <div >
+    <div style="max-width: 50em; margin: auto;">
         <p >@postare.Title</p>
         <p>@postare.Content</p>
         <p>@postare.Time</p>
@@ -23,15 +23,27 @@
             else
             {
                 @* dacă nu e video, e imagine *@
-                <img src="@postare.Media" alt="Article Image" style="width: 100%; max-width: 550px; height: auto; object-fit: cover; border-radius: 10px;" />
+                <img src="@postare.Media" alt="Article Image" style="width: 100%; max-width: 30em; max-height: 30em height: auto; object-fit: cover; border-radius: 10px;" />
             }
         }
         <br/>
         
         <a href="/Post/Details/@postare.Id" >Show post details</a>
         <br/>
-        <a href="/Post/EditPost/@postare.Id" >Edit post</a>
-        <hr/>    
+        @if (ViewBag.EsteAdmin == true || ViewBag.UserId == postare.UserId)
+        {
+            <form asp-action="Delete" asp-controller="Post" asp-route-id="@postare.Id" method="post">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-danger">Delete Post</button>
+            </form>
+        }
+        
+        @if (ViewBag.UserId == postare.UserId)
+        {
+            <a href="/Post/EditPost/@postare.Id" >Edit post</a>
+            <hr/>    
+        }
+            
     </div>
 }
 

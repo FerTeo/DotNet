@@ -103,27 +103,27 @@
                         <h5 class="card-title">@postare.Title</h5>
                         <p class="card-text">@postare.Content</p>
                     
-                        @* Logica pentru afisare Media (Video sau Imagine) *@
-                        @if (!string.IsNullOrEmpty(postare.Media))
-                        {
-                            <div class="mb-3">
-                                @if (postare.Media.EndsWith(".mp4") || postare.Media.EndsWith(".mov"))
-                                {
-                                    <video width="100%" height="auto" controls style="max-height: 400px; border-radius: 10px;">
-                                        <source src="@postare.Media" type="video/mp4">
-                                        Your browser does not support the video tag.
-                                    </video>
-                                }
-                                else
-                                {
-                                    <img src="@postare.Media" alt="Post Image" style="width: 100%; height: auto; object-fit: cover; border-radius: 10px; max-height: 500px;" />
-                                }
-                            </div>
-                        }
+                    @* Logica pentru afisare Media (Video sau Imagine) *@
+                    @if (!string.IsNullOrEmpty(postare.Media))
+                    {
+                        <div class="mb-3">
+                            @if (postare.Media.EndsWith(".mp4") || postare.Media.EndsWith(".mov"))
+                            {
+                                <video width="100%" height="auto" controls style="max-height: 400px; border-radius: 10px;">
+                                    <source src="@postare.Media" type="video/mp4">
+                                    Your browser does not support the video tag.
+                                </video>
+                            }
+                            else
+                            {
+                                <img src="@postare.Media" alt="Post Image" style="width: 100%; height: auto; object-fit: cover; border-radius: 10px; max-height: 500px;" />
+                            }
+                        </div>
+                    }
 
-                        <p class="text-muted small">
-                            Posted at: @postare.formattedTime
-                        </p>
+                    <p class="text-muted small">
+                        Posted: @postare.Time
+                    </p>
                     
                         @* Butoane de actiune (daca vrei sa le pui si aici) *@
                         <a href="/Post/Details/@postare.Id" class="btn btn-sm btn-info text-white">View Details</a>
