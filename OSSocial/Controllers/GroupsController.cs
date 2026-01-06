@@ -40,9 +40,10 @@ namespace OSSocial.Controllers
             {
                 var groups = db.Groups
                     .Include(g => g.Members)
-                    .Include(g => g.User);
+                    .Include(g => g.User)
+                    .ToList();
 
-                if (groups is null)
+                if (!groups.Any())
                 {
                     return NotFound();
                 }
@@ -59,9 +60,10 @@ namespace OSSocial.Controllers
                 var groups = db.Groups
                     .Include(g => g.Members)
                     .Include(g => g.User)
-                    .Where(g => g.UserId == currentUserId || g.Members.Any(m => m.UserId == currentUserId));
+                    .Where(g => g.UserId == currentUserId || g.Members.Any(m => m.UserId == currentUserId))
+                    .ToList();
                 
-                if (groups is null)
+                if (!groups.Any())
                 {
                     return NotFound();
                 }
@@ -99,24 +101,20 @@ namespace OSSocial.Controllers
                 return RedirectToAction("Index", "Post");
             }
 
-            // verific daca grupul este privat
-            if (group.IsPublic == false)
-            {
-                // caut membrul in baza de date
-                var esteMembru = db.GroupMembers
-                    .Where(gm => gm.GroupId == id)
-                    .Where(gm => gm.UserId == _userManager.GetUserId(User))
-                    .FirstOrDefault();
+            // Determine viewing rights for current user (don't redirect; render page with info)
+            var currentUserId = User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            bool isAdmin = User?.IsInRole("Admin") == true;
+            bool isOwner = group.UserId == currentUserId;
+            bool isMember = db.GroupMembers.Any(gm => gm.GroupId == group.Id && gm.UserId == currentUserId);
 
-                // daca nu este gasit si nu e nici admin nu poate accesa continutul grupului
-                if (esteMembru == null && !User.IsInRole("Admin"))
-                {
-                    TempData["message"] = "You must be a member of this group to view its content.";
-                    TempData["messageType"] = "alert-danger";
-                    return RedirectToAction("Index", "Post");
-                }
-            }
-            
+            bool canView = group.IsPublic || isAdmin || isOwner || isMember;
+
+            // expose flags to the view so it can show a friendly message / hide controls when necessary
+            ViewBag.CanView = canView;
+            ViewBag.IsMember = isMember;
+            ViewBag.IsOwner = isOwner;
+            ViewBag.EsteAdmin = isAdmin;
+
             return View(group);
         }
 
@@ -164,7 +162,20 @@ namespace OSSocial.Controllers
             
             ViewBag.EsteAdmin = User.IsInRole("Admin");
             
-            ViewBag.UserCurent = _userManager.GetUserId(User);
-}
+            ViewBag.UserCurent = _user_manager_getuserid_safe();
+        }
+
+        // small helper to safely get current user id even if user manager is null
+        private string? _user_manager_getuserid_safe()
+        {
+            try
+            {
+                return _userManager?.GetUserId(User);
+            }
+            catch
+            {
+                return null;
+            }
+        }
     }    
 }
