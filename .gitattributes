@@ -1,0 +1,6 @@
+# LF vs CRLF issues 
+*.cs text eol=lf
+*.cshtml text eol=lf
+*.sln text eol=lf
+*.csproj text eol=lf
+
