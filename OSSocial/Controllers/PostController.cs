@@ -137,7 +137,7 @@ namespace OSSocial.Controllers
                 var group = db.Groups.Find(groupId);
                 if (group != null)
                 {
-                    // allow redirect only if the group is public or the user is a member/owner/admin
+                    // allow posting user to be redirected to the group page if they have access
                     // reuse the currentUserId from above
                     var creatorUserId = currentUserId;
 
@@ -145,7 +145,7 @@ namespace OSSocial.Controllers
                     bool isOwner = group.UserId == creatorUserId;
                     bool isMember = db.GroupMembers.Any(gm => gm.GroupId == groupId && gm.UserId == creatorUserId);
 
-                    if (group.IsPublic || isAdmin || isOwner || isMember)
+                    if (isAdmin || isOwner || isMember)
                     {
                         return RedirectToAction("GroupProfile", "Groups", new { id = groupId });
                     }
