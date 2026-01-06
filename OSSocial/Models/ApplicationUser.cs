@@ -26,5 +26,16 @@ namespace OSSocial.Models
         // pentru popularea unui dropdown list
         [NotMapped]
         public IEnumerable<SelectListItem>? AllRoles { get; set; }
+        
+        // GRUPURILE PE CARE UTILIZATORUL LE-A CREAT
+        // un user poate crea mai multe grupuri
+        // un grup este creat de catre un SINGUR user
+        public ICollection<Group>? OwnedGroups { get; set; }
+        
+        // GRUPURILE IN CARE UTILIZATORUL ESTE MEMBRU
+        // colectie de grupuri pt fiecare utilizator
+        // un user poate apartine mai multor grupuri 
+        // un grup poate avea mai multi membri
+        public ICollection<GroupMember>? GroupMembership { get; set; }
     }
 }

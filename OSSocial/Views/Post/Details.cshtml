@@ -127,10 +127,17 @@
 
                             <label>What do you want to say? :3</label>
                             <br />
-
-                            <textarea class="form-control" name="Content"></textarea>
-
-                            <span asp-validation-for="Content" class="text-danger"></span>
+                            <textarea name="Content" class="form-control"></textarea>
+                            
+                            <br />
+                            
+                            @if (Context.Request.Query["err"] == "empty")
+                            {
+                                <div class="alert alert-danger">
+                                    Can't post an empty comment :(
+                                </div>
+                            }
+                            
                             <br /><br />
                             
                             <button class="btn btn-success " type="submit">Add comment!</button>

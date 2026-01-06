@@ -74,18 +74,27 @@ namespace OSSocial.Controllers
 
         [HttpPost("CreatePost")]
         [Authorize] // te trimite direct la login daca nu esti logat!!
-        public async Task<IActionResult> CreatePost(Post postare, IFormFile Image) // metoda apelata cand se da submit la formular
+        public async Task<IActionResult> CreatePost(Post postare, IFormFile Image, Group? group) // metoda apelata cand se da submit la formular
         {
             // time and userId set automatically 
             postare.Time = DateTime.Now;
             
             var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             postare.UserId = currentUserId;
+
+            // verific daca postarea e creata de pe un grup
+            if (group != null)
+            {
+                postare.GroupId = group.GetGroupId();
+                postare.Group = group;
+            }
             
             // validare/ clear validation errors
             ModelState.Remove(nameof(postare.UserId));
             ModelState.Remove(nameof(postare.Time));
-
+            ModelState.Remove(nameof(postare.Group));
+            
+            // pentru fisiere media
             if (Image != null && Image.Length > 0)
             {
                 // info din articles app lab 9
@@ -124,25 +133,25 @@ namespace OSSocial.Controllers
                 
                 postare.Media = dbPath;
             }
-
-            // if (TryValidateModel(postare))
+            
+            // try
             // {
-            //     db.Posts.Add(postare);
-            //     await db.SaveChanges();
-            //
-            //     return RedirectToAction("Feed");
-            // } 
-           
-            try
-            {
                 db.Posts.Add(postare);
                 db.SaveChanges();
+                
+                // verifici daca postarea apartine unui grup
+                if (postare.GroupId != null && postare.GroupId != 0)
+                {
+                    // pe pagina grupului daca postarea apartine acestuia
+                    return Redirect("/Groups/Group/" + postare.GroupId);
+                }
+                
                 return RedirectToAction("Feed"); // dupa ce creezi o postare te intorci pe feed
-            }
-            catch (Exception)
-            {
-                return View("Error");
-            }
+            // }
+            // catch (Exception)
+            // {
+            //     return View("Error");
+            // }
         }
 
         [Authorize]
