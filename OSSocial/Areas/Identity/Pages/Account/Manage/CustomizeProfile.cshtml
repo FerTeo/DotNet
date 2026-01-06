@@ -1,0 +1,45 @@
+@page
+@model OSSocial.Areas.Identity.Pages.Account.Manage.CustomizeProfileModel
+@{
+    ViewData["Title"] = "Customize profile";
+}
+<h4>Customize profile</h4>
+
+<form method="post" enctype="multipart/form-data" class="form">
+    <div class="mb-3">
+        <label class="form-label">Current image</label>
+        @if (!string.IsNullOrEmpty(Model.CurrentImageUrl))
+        {
+            <div>
+                <img src="@Model.CurrentImageUrl" alt="profile" style="max-height:140px;" />
+            </div>
+        }
+        else
+        {
+            <div>No image</div>
+        }
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Input.ProfileImage" class="form-label">New profile image</label>
+        <input asp-for="Input.ProfileImage" type="file" class="form-control" />
+        <span asp-validation-for="Input.ProfileImage" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Input.Bio" class="form-label"></label>
+        <textarea asp-for="Input.Bio" class="form-control"></textarea>
+        <span asp-validation-for="Input.Bio" class="text-danger"></span>
+    </div>
+
+    <div class="form-check mb-3">
+        <input asp-for="Input.IsPrivate" class="form-check-input" />
+        <label asp-for="Input.IsPrivate" class="form-check-label">Private account</label>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save</button>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

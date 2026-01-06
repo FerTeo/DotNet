@@ -1,0 +1,38 @@
+.profile-card {
+    max-width: 720px;
+    margin: 1.5rem auto;
+}
+
+.avatar-circle {
+    width: 160px;
+    height: 160px;
+    min-width: 160px;
+    min-height: 160px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    font-weight: 600;
+    overflow: hidden;
+    background: #e9ecef;
+}
+
+.avatar-circle img,
+.avatar-img {
+    width: 100% ;
+    height: 100% ;
+    object-fit: cover ; /* crop pentru a incapea in cerc */
+    display: block ;
+    max-width: none ;
+}
+
+.meta-label {
+    font-weight: 600;
+    color: #495057;
+}
+
+.profile-card .card-body {
+    gap: 1rem;
+}
+

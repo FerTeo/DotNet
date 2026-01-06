@@ -14,6 +14,8 @@ namespace OSSocial.Models
         
         public bool? IsPrivate { get; set; }
         
+        public string? ProfileImageUrl { get; set; }
+        
         // un user poate posta mai multe postari
         public virtual ICollection<Post>? Posts { get; set; }
         
