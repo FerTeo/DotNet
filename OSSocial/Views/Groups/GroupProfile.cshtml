@@ -34,6 +34,26 @@
                 </form>
             </div>
         }
+        @* LEAVE GROUP button *@
+        else
+        if (ViewBag.IsMember == true && ViewBag.IsOwner == false)
+        {
+            <div class="card-footer">
+                <form method="post" asp-controller="Groups" asp-action="LeaveGroup">
+                    <input type="hidden" name="GroupId" value="@Model.Id" />
+                    <button type="submit" class="btn btn-danger">Leave Group</button>
+                </form>
+            </div>
+        }
+        else if (ViewBag.IsOwner == true)
+        {
+            <div class="card-footer">
+                <form method="post" asp-controller="Groups" asp-action="LeaveGroup">
+                    <input type="hidden" name="GroupId" value="@Model.Id" />
+                    <button type="submit" class="btn btn-danger">Delete Group</button>
+                </form>
+            </div>
+        }
     </div>
 
     @* ZONA DE POSTARE (Doar pentru membrii) *@
@@ -129,7 +149,6 @@
         <ul>
         @foreach (var member in ViewBag.Members)
         {
-            
             <li>
                 <i class="bi bi-person"></i> @(member.User?.UserName ?? "Unknown User")
             </li>
