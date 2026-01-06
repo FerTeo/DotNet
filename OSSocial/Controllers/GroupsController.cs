@@ -81,6 +81,22 @@ namespace OSSocial.Controllers
             }
         }
         
+        [HttpGet("Explore")]
+        public IActionResult Explore()
+        {
+            SetAccessRights();
+
+            var publicGroups = db.Groups
+                .Include(g => g.Members)
+                .Include(g => g.User)
+                .Where(g => g.IsPublic)
+                .ToList();
+
+            ViewBag.PublicGroups = publicGroups;
+
+            return View();
+        }
+        
         // show all posts on a group's profile page
         [HttpGet("Group/{id}")]
         public IActionResult GroupProfile(int id)
@@ -114,6 +130,14 @@ namespace OSSocial.Controllers
             ViewBag.IsMember = isMember;
             ViewBag.IsOwner = isOwner;
             ViewBag.EsteAdmin = isAdmin;
+            
+            // pt a afisa toti membrii grupului
+            var member = db.GroupMembers 
+                .Include(gm => gm.User)
+                .Where(gm => gm.GroupId == group.Id)
+                .ToList();
+            
+            ViewBag.Members = member;
 
             return View(group);
         }
@@ -132,11 +156,19 @@ namespace OSSocial.Controllers
         [Authorize(Roles = "Admin, User, Editor")]
         public IActionResult Create(Group group)
         {
+            // owner 
             group.UserId = _userManager.GetUserId(User);
 
             if (ModelState.IsValid)
             {
                 db.Groups.Add(group);
+                db.SaveChanges();
+                
+                // also need to add owner member entry
+                GroupMember groupMember = new GroupMember(_userManager.GetUserId(User), group.Id);
+                groupMember.IsModerator = true;
+                
+                db.GroupMembers.Add(groupMember);
                 db.SaveChanges();
                 
                 TempData["message"] = "Group created successfully :P";
@@ -148,6 +180,40 @@ namespace OSSocial.Controllers
             {
                 return View(group);
             }
+        }
+        
+        // functionalitatea propriu-zisa de a da join intr-un grup
+        // poti da join unui grup doar daca esti logat
+        [HttpPost]
+        [Authorize(Roles =  "Admin, User, Editor")]
+        public IActionResult JoinGroup(int GroupId)
+        {
+            var group = db.Groups.Find(GroupId);
+            if (group == null)
+            {
+                TempData["message"] = "Group not found";
+                TempData["messageType"] = "alert-danger";
+                return RedirectToAction("Explore");
+            }
+
+            var currentUserId = _userManager.GetUserId(User);
+
+            // check if already a member
+            bool isAlreadyMember = db.GroupMembers.Any(gm => gm.GroupId == GroupId && gm.UserId == currentUserId);
+            if (isAlreadyMember)
+            {
+                TempData["message"] = "You are already a member of this group.";
+                TempData["messageType"] = "alert-info";
+                return RedirectToAction("GroupProfile", new { id = GroupId });
+            }
+
+            GroupMember newMember = new GroupMember(currentUserId, group.Id);
+            db.GroupMembers.Add(newMember);
+            db.SaveChanges();
+
+            TempData["message"] = "You have joined the group!";
+            TempData["messageType"] = "alert-success";
+            return RedirectToAction("GroupProfile", new { id = GroupId });
         }
         
         // ca sa afisezi butoane de editare/ stergere in view
