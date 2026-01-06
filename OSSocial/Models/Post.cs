@@ -44,6 +44,10 @@ namespace OSSocial.Models
         // un articol poate avea o colectie de comentarii
         public virtual ICollection<Comment> Comments { get; set; } = [];
         
+        //un articol poate avea o colectie de comentarii
+        
+        public virtual ICollection<Reaction> Reactions { get; set; } = [];
+
         // foreign key-ul grupului din care face parte postarea (daca face parte)
         public int? GroupId { get; set; }
         

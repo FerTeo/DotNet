@@ -21,6 +21,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     
     public DbSet<Comment> Comments { get; set; }
     
+    public DbSet<Reaction> Reactions { get; set; }
+    
     public DbSet<Group> Groups { get; set; }
     
     public DbSet<GroupMember> GroupMembers { get; set; }
