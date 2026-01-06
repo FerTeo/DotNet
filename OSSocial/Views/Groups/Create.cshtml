@@ -1,105 +1,35 @@
 @model OSSocial.Models.Group
 
-<style>
-    .silly-font {
-        font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Sans', cursive;
-    }
-    .super-round {
-        border-radius: 30px;
-    }
-    .blob-card {
-        background-color: #fff0f5; /* Lavender Blush */
-        border: 4px solid #ff69b4; /* Hot Pink Border */
-        box-shadow: 10px 10px 0px #87ceeb; /* Sky Blue Shadow */
-    }
-    .funky-input {
-        border: 3px dashed #ffa500; /* Orange Dashed Border */
-        background-color: #fffff0; /* Ivory */
-        border-radius: 15px;
-        color: #4b0082;
-    }
-    .funky-input:focus {
-        background-color: #fff;
-        border-color: #ff1493;
-        box-shadow: 0 0 15px #ff69b4;
-        transform: rotate(-1deg);
-    }
-    .jelly-btn {
-        background-color: #32cd32; /* Lime Green */
-        border: none;
-        border-radius: 50px;
-        font-size: 1.2rem;
-        transition: transform 0.2s;
-    }
-    .jelly-btn:hover {
-        background-color: #00ff7f;
-        transform: scale(1.1) rotate(2deg);
-    }
-    .toggle-fun:checked {
-        background-color: #ff00ff;
-        border-color: #ff00ff;
-    }
-</style>
+<br />
 
-<div class="container mt-5 silly-font">
+<h2 class="mb-5 text-center">Create a new Group</h2>
+
+<br />
+
+<div class="container">
     <div class="row justify-content-center">
-        <div class="col-md-7">
-            
-            <div class="card blob-card super-round p-3">
+        <div class="col-md-6">
+            <form asp-action="Create" asp-controller="Groups" method="post">
+
+                <label asp-for="Name">Group name</label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+                <br />
                 
-                <div class="text-center mb-4">
-                    <h1 style="color: #ff1493; text-shadow: 2px 2px #ffe4e1;">
-                        ✨ Super Secret Club Creator ✨
-                    </h1>
-                    <p class="text-muted">Time to make something awesome! 🤪</p>
-                </div>
+                <label asp-for="Description">Describe your group:</label>
+                <input asp-for="Description" class="form-control" />
+                <br />
                 
-                <div class="card-body">
-                    <form asp-action="Create" asp-controller="Groups" method="post">
-                        
-                        <div class="mb-4">
-                            <label asp-for="Name" class="h5" style="color: #ff4500;">
-                                What should we call it? 🏷️
-                            </label>
-                            <input asp-for="Name" class="form-control funky-input p-3" placeholder="e.g. The Cool Cats Club 🐱" />
-                            <span asp-validation-for="Name" class="text-danger fw-bold"></span>
-                        </div>
-
-                        <div class="mb-4">
-                            <label asp-for="Description" class="h5" style="color: #9370db;">
-                                What's the tea? (Description) 🍵
-                            </label>
-                            <textarea asp-for="Description" class="form-control funky-input p-3" rows="3" placeholder="Tell us the vibe... No boring stuff allowed!"></textarea>
-                        </div>
-
-                        <div class="mb-4 p-3 super-round" style="background-color: #e6e6fa; border: 2px dotted #9370db;">
-                            <div class="form-check form-switch d-flex align-items-center">
-                                <input class="form-check-input toggle-fun" type="checkbox" asp-for="IsPublic" id="publicSwitch" style="width: 3em; height: 1.5em; cursor: pointer;">
-                                <label class="form-check-label ms-3" for="publicSwitch">
-                                    <strong style="font-size: 1.1em; color: #4b0082;">
-                                        Party Mode? (Public Group) 🎉
-                                    </strong>
-                                    <div class="small text-muted">
-                                        Uncheck for "Top Secret Base" mode (Private) 🤫
-                                    </div>
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="d-grid gap-2 mt-5">
-                            <button type="submit" class="btn jelly-btn text-white fw-bold py-3 shadow">
-                                🚀 BLAST OFF (Create Group)
-                            </button>
-                            
-                            <a asp-action="Index" class="text-center mt-2 text-decoration-none" style="color: #ff69b4;">
-                                Nah, take me back 🐢
-                            </a>
-                        </div>
-
-                    </form>
+                <div class="form-check mb-3">
+                    <input type="checkbox" asp-for="IsPublic" class="form-check-input" id="publicCheck"/>
+                    <label class="form-check-label" for="publicCheck">
+                        Is this group public?
+                    </label>
                 </div>
-            </div>
 
+                <button type="submit" class="btn btn-success">Create Group</button>
+
+            </form>
         </div>
     </div>
 </div>
