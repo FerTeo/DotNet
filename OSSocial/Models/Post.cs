@@ -48,6 +48,10 @@ namespace OSSocial.Models
         
         public virtual ICollection<Reaction> Reactions { get; set; } = [];
 
+        // foreign key-ul grupului din care face parte postarea (daca face parte)
+        public int? GroupId { get; set; }
+        
+        public virtual Group? Group { get; set; }
     }    
 }
 

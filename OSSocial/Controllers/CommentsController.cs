@@ -6,17 +6,19 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace OSSocial.Controllers
 {
+    [Route("Comments")]
     public class CommentsController(
         ApplicationDbContext context,
         UserManager<ApplicationUser> userManager,
         RoleManager<IdentityRole> roleManager) : Controller
+    
     {
         private readonly ApplicationDbContext db = context;
         private readonly UserManager<ApplicationUser> _userManager = userManager;
         private readonly RoleManager<IdentityRole> _roleManager = roleManager;
 
         // Add comment (asociat unei postari si unui utilizator)
-        [HttpPost]
+        [HttpPost("New")]
         [Authorize] // orice utilizator logat poate adauga comentarii
         public IActionResult New(Comment comentariu)
         {
@@ -35,12 +37,14 @@ namespace OSSocial.Controllers
             }
             else
             {
-                return Redirect("/Post/Details/" + comentariu.PostId);
+                // daca comentariul nu este valid (ex:empty content)
+                // am incercat si cu TempData dar ma duceam spre cookie-uri si am zis sa nu ma mai complic atp
+                return Redirect("/Post/Details/" + comentariu.PostId + "?err=empty");
             }
         }
 
         // Delete comment
-        [HttpPost]
+        [HttpPost("Delete/{id}")]
         [Authorize(Roles = "User,Editor,Admin")]
         public IActionResult Delete(int id)
         {
@@ -75,9 +79,9 @@ namespace OSSocial.Controllers
         }
 
         // Edit comment 
-        [HttpPost]
+        [HttpGet("Edit/{id}")]
         [Authorize(Roles = "User,Editor,Admin")]
-        public IActionResult Edit(int id, string content)
+        public IActionResult Edit(int id)
         {
             Comment? comentariu = db.Comments.Find(id);
 
@@ -103,9 +107,9 @@ namespace OSSocial.Controllers
             }
         }
 
-        [HttpPost]
+        [HttpPost("Edit/{id}")]
         [Authorize(Roles = "User,Editor,Admin")]
-        public IActionResult EditConfirm(int id, Comment comentariu)
+        public IActionResult Edit(int id, Comment comentariu)
         {
             Comment? comentariuDeModificat = db.Comments.Find(id);
 
@@ -115,10 +119,15 @@ namespace OSSocial.Controllers
             }
             else
             {
-                if (comentariuDeModificat.UserId == _userManager.GetUserId(User)
-                    || User.IsInRole("Admin")
-                    || comentariuDeModificat.Post.UserId == _userManager.GetUserId(User))
+                // comentariul poate fi modficat doar de persoana care l-a scris
+                if (comentariuDeModificat.UserId == _userManager.GetUserId(User))
                 {
+                    
+                    ModelState.Remove(nameof(comentariu.Post));
+                    ModelState.Remove(nameof(comentariu.User));
+                    ModelState.Remove(nameof(comentariu.UserId));
+                    ModelState.Remove(nameof(comentariu.PostId));
+                    
                     if (ModelState.IsValid)
                     {
                         comentariuDeModificat.Content = comentariu.Content;
@@ -127,7 +136,7 @@ namespace OSSocial.Controllers
                     }
                     else
                     {
-                        return View(comentariu);
+                        return View("Edit", comentariu);
                     }
                 }
                 else

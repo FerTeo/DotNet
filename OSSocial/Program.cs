@@ -21,6 +21,14 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 
 builder.Services.AddControllersWithViews();
 
+builder.Services.AddCookiePolicy(
+    options =>
+    {
+        options.CheckConsentNeeded = context => false; // DOAR PT TESTING MOMENTAN --> TB SCHIMBAT LA TRUE DUPA
+        options.MinimumSameSitePolicy = SameSiteMode.None;
+    }
+);
+
 var app = builder.Build();
 
 //Pasul 5
@@ -29,7 +37,7 @@ using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     var context = services.GetRequiredService<ApplicationDbContext>();
-    
+
     SeedData.Initialize(services);
 }
 
