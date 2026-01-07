@@ -1,6 +1,13 @@
-# LF vs CRLF issues 
-*.cs text eol=lf
-*.cshtml text eol=lf
-*.sln text eol=lf
-*.csproj text eol=lf
+# Set default behavior to automatically normalize line endings
+* text=auto
 
+# Force specific files to use LF
+*.sh text eol=lf
+*. py text eol=lf
+
+# Force specific files to use CRLF (if needed for Windows)
+*.bat text eol=crlf
+
+# Binary files
+*.png binary
+*.jpg binary
