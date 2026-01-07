@@ -183,6 +183,13 @@ namespace OSSocial.Models
                         Description = "Group for music enthusiasts where u can post about your passion!",
                         UserId = "8e445865-a24d-4543-a6c6-9443d048cdb5",//musiclover
                         IsPublic = true
+                    },
+                    new Group
+                    {
+                        Name = "Travelling",
+                        Description = "Group for people how like to travel and eat good food",
+                        UserId = "8e445865-a24d-4543-a6c6-9443d048cdb3",//fernando
+                        IsPublic = true
                     }
                 
                 );
@@ -214,7 +221,23 @@ namespace OSSocial.Models
                     GroupId = 1, //muziker
                     JoinDate = DateTime.Now,
                     IsModerator = false
+                },
+                new GroupMember
+                {
+                    UserId = "8e445865-a24d-4543-a6c6-9443d048cdb4", //fernando
+                    GroupId = 2, //travell
+                    JoinDate = DateTime.Now,
+                    IsModerator = true
+                },
+                
+                new GroupMember
+                {
+                    UserId = "8e445865-a24d-4543-a6c6-9443d048cdb5", //teo
+                    GroupId = 2, //travell
+                    JoinDate = DateTime.Now,
+                    IsModerator = true
                 }
+                
             );
             
             context.SaveChanges();
@@ -239,7 +262,8 @@ namespace OSSocial.Models
                     Content = "Am fost dupa sesiune in Paris. Nu trec la ASC. YOLO ",
                     Time = DateTime.Now,
                     UserId = "8e445865-a24d-4543-a6c6-9443d048cdb3", // fernando
-                    Media = "/images/5638f79b-18ad-4215-87c2-353fdd544c42_paris.JPG"
+                    Media = "/images/5638f79b-18ad-4215-87c2-353fdd544c42_paris.JPG",
+                    GroupId = 2 //travell
                 },
                 new Post
                 {
@@ -265,7 +289,17 @@ namespace OSSocial.Models
                     UserId = "8e445865-a24d-4543-a6c6-9443d048cdb5", // musiclover
                     Media = "/images/47224870-cda4-4c45-8b62-20412038e052_cd.jpg",
                     GroupId = 1
+                },
+                new Post
+                {
+                    Title = "London Trip",
+                    Content = "Big ben!!",
+                    Time = DateTime.Now,
+                    UserId = "8e445865-a24d-4543-a6c6-9443d048cdb3", // fernando
+                    Media = "/images/7acca6fc-7d54-419d-ad30-cce79925e4c4_london.JPG",
+                    GroupId = 2 //travel
                 }
+                
             );
             
             context.SaveChanges();
