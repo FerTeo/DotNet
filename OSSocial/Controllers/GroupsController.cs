@@ -63,15 +63,8 @@ namespace OSSocial.Controllers
                     .Where(g => g.UserId == currentUserId || g.Members.Any(m => m.UserId == currentUserId))
                     .ToList();
                 
-                if (!groups.Any())
-                {
-                    return NotFound();
-                }
-                else
-                {
                     ViewBag.Groups = groups;
                     return View();
-                }
             }
             else
             {
