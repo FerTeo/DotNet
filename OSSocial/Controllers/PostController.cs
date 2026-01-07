@@ -1,9 +1,12 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using OSSocial.Data;
 using OSSocial.Models;
+using OSSocial.Services;
 using Microsoft.EntityFrameworkCore;
+using ContentResult = OSSocial.Services.ContentResult;
 
 namespace OSSocial.Controllers
 {
@@ -11,10 +14,20 @@ namespace OSSocial.Controllers
     public class PostController : Controller
     {
         private readonly ApplicationDbContext db;
-        
-        public PostController(ApplicationDbContext context)
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly IContentAnalysisService _contentService;
+
+        public PostController(
+            ApplicationDbContext context,
+            UserManager<ApplicationUser> userManager, 
+            RoleManager<IdentityRole> roleManager, 
+            IContentAnalysisService contentService)
         {
             db = context;
+            _userManager = userManager;
+            _roleManager = roleManager;
+            _contentService = contentService;
         }
 
         [HttpGet("")]
@@ -64,7 +77,31 @@ namespace OSSocial.Controllers
             
             return View(postare);
         }
-
+        
+        private bool HelperCheckAcceptedPost(ref Post postare, ContentResult analysisResult)
+        {
+            // Cazul ideal: API-ul a răspuns cu succes
+            if (analysisResult.Success)
+            {
+                if (analysisResult.IsAccepted)
+                {
+                    postare.ContainsInappropriateContent = false;
+                    postare.InappropriateContentReason = null;
+                    postare.DateReviewed = DateTime.Now;
+                    return true;
+                }
+                else
+                {
+                    // API-ul a zis NU -> Blocăm
+                    return false;
+                }
+            }
+    
+            // Cazul de eroare (API picat/cheie greșită/parse error)
+            ModelState.AddModelError(string.Empty, $"Eroare filtru AI: {analysisResult.ErrorMessage}");
+            return false; // <--- MODIFICARE: Blochează postarea dacă AI-ul nu merge
+        }
+        
         [Authorize] // necesar ca user-ul sa fie logat, altfel nu poate crea o postare
         [HttpGet("CreatePost")] // GET /Post/CreatePost - returneaza formularul
         public IActionResult CreatePost() // ar tb sa returneze un formular
@@ -79,13 +116,53 @@ namespace OSSocial.Controllers
             // time and userId set automatically 
             postare.Time = DateTime.Now;
             
-            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var currentUserId = _userManager.GetUserId(User);
             postare.UserId = currentUserId;
 
             // validare/ clear validation errors
             ModelState.Remove(nameof(postare.UserId));
             ModelState.Remove(nameof(postare.Time));
             ModelState.Remove(nameof(postare.Group));
+            
+            // pt a posta ceva tb atat titlul cat si continutul sa fie adecvate
+            // pe viitor ar tb implementat si analiza video dar...
+            
+            // pt ca am primit eroarea "TooManyRequests" .. faceam separat verificarea pentru titlu si content.... 
+            // unesc titlu si continutul ca sa nu mai primesc aceasta eroare....
+            string textToAnalyze = $"Title: {postare.Title}\nContent: {postare.Content}";
+            
+            // apel catre API facut doar pe text empty
+            if (!string.IsNullOrWhiteSpace(textToAnalyze))
+            {
+                var analysisResult = await _contentService.AnalyzeContentAsync(textToAnalyze);
+
+                if (!HelperCheckAcceptedPost(ref postare, analysisResult))
+                {
+                    string errorMessage;
+                    
+                    if (!analysisResult.Success)
+                    {
+                        // eroare tehnica (ex: TooManyRequests)
+                        errorMessage = $"{analysisResult.ErrorMessage}. Please wait a moment and try again.";
+                    }
+                    else
+                    {
+                        // respins de AI (continut vulgar)
+                        errorMessage = $"Post rejected: {analysisResult.Reason}";
+                    }
+
+                    ViewBag.ContinutInadecvat = errorMessage;
+                    
+                    // debug info ca admin!
+                    ViewBag.EsteAdmin = User.IsInRole("Admin");
+                    ViewBag.ApiIsAccepted = $"{analysisResult.IsAccepted}";
+                    ViewBag.ApiErrorMessage = $"{analysisResult.ErrorMessage}";
+
+                    return View(postare);
+                }
+            }
+            
+            ViewBag.EsteAdmin = User.IsInRole("Admin");
 
             // pentru fisiere media
             if (Image != null && Image.Length > 0)

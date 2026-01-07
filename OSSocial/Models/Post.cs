@@ -52,6 +52,17 @@ namespace OSSocial.Models
         public int? GroupId { get; set; }
         
         public virtual Group? Group { get; set; }
+        
+        // implementare GeminiAi
+        // atribute pentru verificarea daca o postare contine content neadecvat
+        // daca poate fi postat sau nu
+        public bool ContainsInappropriateContent { get; set; } = false;
+        
+        // motivul pt care NU ar putea fi postat  
+        public string? InappropriateContentReason { get; set; } = null;
+        
+        // data la care a fost revizuit continutul postarii de catre GeminiAi
+        public DateTime? DateReviewed { get; set; } = null;
     }    
 }
 

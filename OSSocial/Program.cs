@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using OSSocial.Data;
 using OSSocial.Models;
+using OSSocial.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,7 +13,12 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
+// serviciu GoogleAi
+builder.Services.AddScoped<IContentAnalysisService,
+    ContentAnalysisService>();
+
 // servicii pentru user custom
+
 builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
         options.SignIn.RequireConfirmedAccount = true)
     .AddRoles<IdentityRole>()
