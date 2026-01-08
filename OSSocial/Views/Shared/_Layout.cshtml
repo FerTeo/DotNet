@@ -4,11 +4,15 @@
     
     var settingsUrl = Url.Page("/Account/Login", new { area = "Identity" });
 
-    if (User?.Identity?.IsAuthenticated == true)
+    if (User.Identity.IsAuthenticated)
     {
         userLogat = true;
         settingsUrl = Url.Page("/Account/Manage/Index", new { area = "Identity" });
     }
+
+    // detect current route to highlight the Photos app icon in the bottom nav
+    var currentController = (ViewContext.RouteData.Values["controller"] ?? string.Empty).ToString();
+    var isPhotosApp = currentController?.ToLowerInvariant() == "post"; // treat Post controller as Photos app
 }
 
 
@@ -68,7 +72,7 @@
                 </li>
 
                 <li class="nav-item mx-2">
-                    <a class="nav-link text-center" asp-controller="Post" asp-action="Feed" title="Feed" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Feed" aria-label="Feed">
+                    <a class="nav-link text-center @(isPhotosApp ? "active-app" : "")" asp-controller="Post" asp-action="Feed" title="Feed" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Feed" aria-label="Feed">
                         <img src="@Url.Content("~/assets/icons/images.svg")" alt="Feed" width="36" height="36"/>
                     </a>
                 </li>
@@ -86,7 +90,7 @@
                     </a>
                 </li>
                 
-                @if (@userLogat == true)
+                @if (userLogat)
                 {
                     <li class="nav-item mx-2">
                         <form  class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
@@ -95,7 +99,6 @@
                             </button>
                         </form>
                     </li>
-                    
                 }
 
             </ul>

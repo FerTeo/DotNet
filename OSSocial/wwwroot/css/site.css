@@ -1,71 +1,155 @@
-
-
-#backgroundVideo {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  z-index: -1; /*te rog pune-l in spatele textului ca mor*/
+:root {
+    --bg: #f5fbff; /* subtle pastel blue-white for a livelier background */
+    --bg-gradient: linear-gradient(180deg, #ffffff 0%, #f5fbff 60%); /* gentle gradient */
+    --card: #ffffff;
+    --muted: #6c757d;
+    --accent: #1e90ff;
+    --accent-strong: #1570d7;
+    --shadow: 0 6px 18px rgba(16,24,40,0.06);
 }
 
-/*.content {*/
-/*  position: fixed;*/
-/*  bottom: 50;*/
-/*  background: rgba(0, 0, 0, 0.5);*/
-/*  color: #f1f1f1;*/
-/*  width: 30%;*/
-/*  padding: 10em;*/
-/*}*/
-
-html {
-  font-size: 20px;
-}
-
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
+/* make comment action buttons more visible globally (optional) */
+.comment-item .btn, .comments-area .btn {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.95rem;
 }
 
 body {
-  margin-bottom: 60px;
-  /*background-image: url("../images/WindowsXpWallpaper.jpg");*/
-  /*background-repeat: no-repeat;*/
-  /*background-size: cover;*/
-  /* Color was white which made text invisible on a white background when the video didn't load */
-  color: black; /* default Bootstrap body color (dark) */
+    background: var(--bg-gradient);
+    color: #0b1220;
+    margin-bottom: 80px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, system-ui, sans-serif;
 }
 
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--bs-secondary-color);
-  text-align: end;
+/* Cards and media */
+.card {
+    background: var(--card);
+    border: 1px solid rgba(16,24,40,0.04);
+    box-shadow: var(--shadow);
+    border-radius: 12px;
 }
 
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
+/* specific cards */
+.media-card .card-body { min-height: 320px; display: flex; flex-direction: column; }
+.comments-card { display: flex; flex-direction: column; height: 100%; }
+.comments-column { max-height: 60vh; overflow-y: auto; padding-right: 0.5rem; }
+
+/* comments */
+.comment-item {
+    background: rgba(30,144,255,0.03);
+    border: 1px solid rgba(30,144,255,0.06);
 }
 
+/* buttons and links */
+.btn-primary {
+    background-color: var(--accent);
+    border-color: var(--accent);
+}
+.btn-primary:hover {
+    background-color: var(--accent-strong);
+    border-color: var(--accent-strong);
+}
 
+/* nav bottom adjustments */
+nav.navbar {
+    background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(250,250,252,0.95));
+    border-top: 1px solid rgba(16,24,40,0.06);
+}
 
-.login_container
-{
+/* responsive media */
+.media-display img, .media-display video {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* ensure large screens have balanced heights */
+@media (min-width: 992px) {
+    .media-card .media-display, .comments-card .comments-column { max-height: 72vh; }
+}
+
+/* Ensure the main content area fills the viewport (subtract header + bottom nav height) */
+main[role="main"] {
+    min-height: calc(100vh - 120px); /* adjust if your header/footer total height differs */
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
+}
+
+/* Make container a column so the card can stretch */
+.container.d-flex, .container.d-flex.flex-column, .container.d-flex.flex-column > .card {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Make the media-app card expand to fill available vertical space */
+.media-app {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0; /* allow children to control overflow */
+}
+
+.media-app .card-body {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+/* Ensure row and columns inside the card use full height */
+.media-app .row {
+    flex: 1 1 auto;
+    display: flex;
+}
+
+.media-area, .comments-area {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.media-area .media-display {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.comments-column {
+    overflow-y: auto;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+/* --- Photos app active icon in bottom nav --- */
+.navbar .nav-link.active-app {
+    background: var(--accent);
+    border-radius: 12px;
+    padding: 6px 8px; /* space around icon */
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(30,144,255,0.15);
+    transition: transform 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+    display: inline-flex;
+    align-items: center;
     justify-content: center;
 }
 
+.navbar .nav-link.active-app img {
+    /* make the icon appear white over the accent background */
+    filter: brightness(0) invert(1);
+    transition: filter 150ms ease;
+}
 
+/* small hover effect to keep it interactive */
+.navbar .nav-link:hover.active-app {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 26px rgba(30,144,255,0.18);
+}
 
-
-
-
-
-
+/* if you prefer a colored outline instead of full background, uncomment the alternative below */
+/*.navbar .nav-link.active-app {
+    background: transparent;
+    border-radius: 50%;
+    padding: 4px;
+    box-shadow: 0 0 0 3px rgba(30,144,255,0.12) inset;
+}
+*/

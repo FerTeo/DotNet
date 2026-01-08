@@ -3,6 +3,7 @@ using OSSocial.Data;
 using OSSocial.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace OSSocial.Controllers
 {
@@ -45,36 +46,49 @@ namespace OSSocial.Controllers
 
         // Delete comment
         [HttpPost("Delete/{id}")]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "User,Editor,Admin")]
-        public IActionResult Delete(int id)
+        public IActionResult Delete(int id, string? returnUrl)
         {
-            Comment? comentariu = db.Comments.Find(id); // iau comentariul din baza de date
+            // Load comment including its Post to safely access post owner and postId
+            Comment? comentariu = db.Comments
+                .Include(c => c.Post)
+                .FirstOrDefault(c => c.Id == id);
 
             if (comentariu == null)
             {
                 return NotFound();
             }
+
+            var postId = comentariu.PostId;
+            var postOwnerId = comentariu.Post?.UserId;
+            var currentUserId = _userManager.GetUserId(User);
+
+            // un comentariu poate fi sters de: 
+            //  - persoana care l-a scris
+            //  - un admin 
+            //  - detinatorul contului postarii 
+            if (comentariu.UserId == currentUserId
+                || User.IsInRole("Admin")
+                || postOwnerId == currentUserId)
+            {
+                db.Comments.Remove(comentariu);
+                db.SaveChanges();
+
+                // Prefer returning to a provided local returnUrl (the view includes one), otherwise go to Post/Details
+                if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                {
+                    return Redirect(returnUrl);
+                }
+
+                return RedirectToAction("Details", "Post", new { id = postId });
+            }
             else
             {
-                // un comentariu poate fi sters de: 
-                //  - persoana care l-a scris
-                //  - un admin 
-                //  - detinatorul contului postarii 
-                if (comentariu.UserId == _userManager.GetUserId(User)
-                    || User.IsInRole("Admin")
-                    || comentariu.Post.UserId == _userManager.GetUserId(User))
-                {
-                    db.Comments.Remove(comentariu);
-                    db.SaveChanges();
-                    return Redirect("/Posts/Details/" + comentariu.PostId);
-                }
-                else
-                {
-                    TempData["message"] = "Can't delete a comment that isn't yours!";
-                    TempData["messageType"] = "alert-danger";
+                TempData["message"] = "Can't delete a comment that isn't yours!";
+                TempData["messageType"] = "alert-danger";
 
-                    return RedirectToAction("Index", "Post");
-                }
+                return RedirectToAction("Details", "Post", new { id = postId });
             }
         }
 
@@ -150,5 +164,3 @@ namespace OSSocial.Controllers
         }
     }
 }
-
-
