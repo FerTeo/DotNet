@@ -1,159 +1,167 @@
 @model OSSocial.Models.Post
 @{
     ViewData["Title"] = "See post details";
+    int? editId = ViewBag.EditCommentId as int?;
 }
-<h1>@ViewData["Title"]</h1>
+<div class="container my-4 d-flex flex-column">
+    <div class="card media-app shadow-sm">
+        <div class="card-header bg-transparent">
+            <h5 class="mb-0">Photos</h5>
+        </div>
 
-<br>
-<p>@Model.Title</p>
-<p>@Model.Content</p>
-<p>@Model.Time</p>
-
-@if (!string.IsNullOrEmpty(Model.Media))
-{
-    @* doar dacă nu e null, verificăm extensia *@
-    if (Model.Media.EndsWith(".mp4", StringComparison.OrdinalIgnoreCase) || Model.Media.EndsWith(".mov", StringComparison.OrdinalIgnoreCase))
-    {
-        <video width="550" height="300" controls>
-            <source src="@Model.Media" type="video/mp4">
-            Your browser does not support the video tag.
-        </video>
-    }
-    else
-    {
-        @* dacă nu e video, e imagine *@
-        <img src="@Model.Media" alt="Article Image" style="width: 100%; max-width: 550px; height: auto; object-fit: cover; border-radius: 10px;" />
-    }
-}
-
-<br/>
-<form asp-action="Delete" asp-controller="Post" asp-route-id="@Model.Id" method="post">
-    @Html.AntiForgeryToken()
-    <button type="submit" class="btn btn-danger">Delete Post</button>
-</form>
-
-@await Html.PartialAsync("_ReactionsPartial", Model.Id)
-
-<br/>
-
-<a asp-controller="Post" asp-action="Feed">Return to feed</a>
-
-<br/>
-
-
-@foreach (var comm in Model.Comments)
-{
-    <div class="container" style="max-width: 40%;">
-        <div class="row">
-            <div class="col-md-2"></div>
-
-            <div class="col-md-8">
-
-                <div style="margin-block: auto; padding: 10px; border: 1px solid #ccc; border-radius: 5px; right: auto; left: auto" >
-                    <div>
-                        <strong><i class="bi bi-person"> @comm.User.UserName</i></strong>
-                    </div>
-                    <br/>
-                    
-                    <p>@comm.Content</p>
-                    <small>@comm.DateCreated</small>
-                    
-                    @* Afisare eticheta sentiment - vizibila doar pentru Admin *@
-                    @* @if (ViewBag.EsteAdmin == true && comm.SentimentLabel != null) *@
-                    @* { *@
-                    @*     var badgeClass = comm.SentimentLabel switch *@
-                    @*     { *@
-                    @*         "positive" => "bg-success", *@
-                    @*         "negative" => "bg-danger", *@
-                    @*         _ => "bg-secondary" *@
-                    @*     }; *@
-                    @*     var sentimentIcon = comm.SentimentLabel switch *@
-                    @*     { *@
-                    @*         "positive" => "bi-emoji-smile", *@
-                    @*         "negative" => "bi-emoji-frown", *@
-                    @*         _ => "bi-emoji-neutral" *@
-                    @*     }; *@
-                    @*     <span class="badge @badgeClass ms-2"> *@
-                    @*         <i class="bi @sentimentIcon"></i> *@
-                    @*         @comm.SentimentLabel *@
-                    @*         (@(comm.SentimentConfidence?.ToString("P0"))) *@
-                    @*     </span> *@
-                    @* } *@
-                </div>
-                <br>
-
-                @if (comm.UserId == ViewBag.CurrentUserId || ViewBag.EsteAdmin == true)
-                {
-                    <div class="d-flex">
+        <div class="card-body">
+            <div class="row g-4">
+                <!-- Left: media / post content (large) -->
+                <div class="col-12 col-md-7 media-area d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
                         <div>
-                            <a class="btn btn-outline-primary" asp-controller="Comments" asp-action="Edit" asp-route-id="@comm.Id">
-                                <i class="bi bi-pencil-square"></i> Editeaza
-                            </a>
-
+                            <h5 class="card-title mb-0">@Model.Title</h5>
+                            <small class="text-muted">@Model.Time.ToString("g")</small>
                         </div>
                         <div>
-                            <form method="post" asp-controller="Comments" asp-action="Delete" asp-route-id="@comm.Id">
-
-                                <button class="btn btn-outline-danger" type="submit"><i class="bi bi-trash"></i>Sterge</button>
-
+                            <form asp-action="Delete" asp-controller="Post" asp-route-id="@Model.Id" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-outline-danger">Delete</button>
                             </form>
                         </div>
                     </div>
-                }
 
-                <br />
-
-            </div>
-
-            <div class="col-md-2"></div>
-
-        </div>
-
-    </div>
-}
-
-
-@* Afisarea formularului in care se poate adauga un comentariu
-    Doar pt utilizator logat *@
-@if (User.Identity.IsAuthenticated)
-{
-    <div class="container">
-        <div class="row">
-            <div class="col-md-2"></div>
-            <div class="col-md-8">
-                <div class="card">
-                    <form method="post" asp-controller="Comments" asp-action="New">
-                        <div class="card-body">
-
-                            <input type="hidden" name="PostId" value="@Model.Id" />
-
-                            <label>What do you want to say? :3</label>
-                            <br />
-                            <textarea name="Content" class="form-control"></textarea>
-                            
-                            <br />
-                            
-                            @if (Context.Request.Query["err"] == "empty")
+                    <div class="media-display flex-fill d-flex align-items-center justify-content-center">
+                        @if (!string.IsNullOrEmpty(Model.Media))
+                        {
+                            var media = Model.Media.ToLower();
+                            if (media.EndsWith(".mp4") || media.EndsWith(".mov"))
                             {
-                                <div class="alert alert-danger">
-                                    Can't post an empty comment :(
+                                <video class="w-100 media-element" controls>
+                                    <source src="@Model.Media" type="video/mp4" />
+                                </video>
+                            }
+                            else
+                            {
+                                <img src="@Model.Media" alt="Post media" class="img-fluid rounded media-element" />
+                            }
+                        }
+                        else
+                        {
+                            <div class="text-content w-100">
+                                <p class="fs-5">@Model.Content</p>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="mt-3">
+                        @await Html.PartialAsync("_ReactionsPartial", Model.Id)
+                    </div>
+                </div>
+
+                <!-- Right: comments (inside same card) -->
+                <div class="col-12 col-md-5 comments-area d-flex flex-column">
+                    <div class="mb-2 d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">Comments : @((Model.Comments?.Count) ?? 0)</h6>
+                    </div>
+
+                    <div class="comments-column flex-fill p-2">
+                        @if (Model.Comments != null && Model.Comments.Any())
+                        {
+                            foreach (var comm in Model.Comments.OrderByDescending(c => c.DateCreated))
+                            {
+                                <div id="comment-@comm.Id" class="comment-item mb-2 p-2 rounded d-flex align-items-start justify-content-between">
+                                    <div class="comment-body">
+                                        <strong>@comm.User?.UserName</strong>
+                                        <div class="text-muted small">@comm.DateCreated.ToString("g")</div>
+
+                                        @* Inline edit form if this comment is being edited *@
+                                        @if (editId.HasValue && editId.Value == comm.Id && (comm.UserId == ViewBag.CurrentUserId || ViewBag.EsteAdmin == true))
+                                        {
+                                            <form method="post" asp-controller="Comments" asp-action="Edit" asp-route-id="@comm.Id" class="mt-2">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="PostId" value="@Model.Id" />
+                                                <textarea name="Content" class="form-control" rows="3" required>@comm.Content</textarea>
+                                                <div class="mt-2 d-flex gap-2">
+                                                    <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                                                    <a class="btn btn-secondary btn-sm" href="@Url.Action("Details","Post", new { id = Model.Id })#comment-@comm.Id">Cancel</a>
+                                                </div>
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <div class="mt-2">
+                                                <p class="mb-0">@comm.Content</p>
+                                            </div>
+                                        }
+                                    </div>
+
+                                    <div class="comment-actions ms-2 d-flex align-items-start">
+                                        @if (comm.UserId == ViewBag.CurrentUserId || ViewBag.EsteAdmin == true)
+                                        {
+                                            <a class="btn btn-outline-primary btn-sm me-1" href="@Url.Action("Details","Post", new { id = Model.Id, edit = comm.Id })#comment-@comm.Id" title="Edit">Edit</a>
+
+                                            <form method="post" asp-controller="Comments" asp-action="Delete" asp-route-id="@comm.Id" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="returnUrl" value="@Url.Action("Details", "Post", new { id = Model.Id })" />
+                                                <button class="btn btn-outline-danger btn-sm" type="submit" title="Delete">Delete</button>
+                                            </form>
+                                        }
+                                    </div>
                                 </div>
                             }
-                            
-                            <br /><br />
-                            
-                            <button class="btn btn-success " type="submit">Add comment!</button>
-                        </div>
-                    </form>
+                        }
+                        else
+                        {
+                            <div class="text-muted small">No comments yet.</div>
+                        }
+                    </div>
+
+                    <!-- Add comment form moved inside comments-area, directly under the comments list -->
+                    <div class="mt-2 comment-form px-2">
+                        @if (User?.Identity?.IsAuthenticated == true)
+                        {
+                            <form method="post" asp-controller="Comments" asp-action="New" class="d-flex">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="PostId" value="@Model.Id" />
+                                <textarea name="Content" class="form-control me-2" rows="2" placeholder="Write a comment..." required></textarea>
+                                <button class="btn btn-primary" type="submit">Add comment</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <div class="text-center text-muted">You must be logged in to leave a comment.</div>
+                        }
+                    </div>
                 </div>
             </div>
-            <div class="col-md-2"></div>
         </div>
+
+        @* card-footer removed: add-comment is now inside comments-area *@
     </div>
+</div>
+
+<style>
+/* Local styles for the single-container photos app layout */
+.media-app .card-header h5 { font-weight: 600; letter-spacing: 0.2px; }
+.media-area .media-display { max-height: 72vh; display:flex; align-items:center; justify-content:center; }
+.media-element { width:100%; height:auto; max-height:72vh; object-fit:cover; border-radius:8px; }
+
+.comments-area { min-height: 320px; display:flex; flex-direction:column; }
+.comments-column { max-height: 60vh; overflow-y:auto; padding-right:0.4rem; }
+
+/* Make action buttons larger and easier to tap */
+.comment-item .btn {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.95rem;
+    line-height: 1;
 }
-else
-{
-    <div @* class="text-center mt-4"*@> 
-        <p>You must be logged in to leave a comment.</p>
-    </div>
+
+/* Ensure the comment body takes most space and actions sit to the side */
+.comment-item { background: rgba(30,144,255,0.03); border: 1px solid rgba(30,144,255,0.06); }
+.comment-item .comment-body { max-width: calc(100% - 68px); }
+
+/* Add comment form styles */
+.comment-form .form-control {
+    resize: vertical;
+    min-height: 48px;
 }
+.comment-form .btn {
+    min-width: 84px;
+}
+</style>

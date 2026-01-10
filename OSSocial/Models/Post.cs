@@ -10,7 +10,9 @@ namespace OSSocial.Models
         [Key]
         public int Id { get; set; }
 
-        public string Title { get; set; }
+
+        [Required(ErrorMessage = "oops .. the post need a title!")]
+        public string? Title { get; set; }
 
         [Required(ErrorMessage = "oops... seems you're uploading a post without a content :(")]
         public string? Content { get; set; }
@@ -19,7 +21,7 @@ namespace OSSocial.Models
         public DateTime Time { get; set; }
 
         [NotMapped]// documentation: "Denotes that a property or class should be excluded from database mapping."
-        public string formattedTime
+        public string FormattedTime
         {
             get { return Time.ToString("HH:mm"); }
         }
