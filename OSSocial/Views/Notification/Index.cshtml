@@ -1,0 +1,93 @@
+@model List<OSSocial.Models.Notification>
+
+@{
+    ViewData["Title"] = "Notifications";
+}
+
+<div class="container py-4">
+    <h3>Notifications</h3>
+
+    @if (!(Model?.Any() ?? false))
+    {
+        <p>No notifications.</p>
+    }
+    else
+    {
+        <ul class="list-group">
+            @foreach (var n in Model)
+            {
+                <li class="list-group-item list-group-item-info d-flex justify-content-between align-items-start">
+                    <div>
+                        <small class="text-muted">@n.Date.ToLocalTime().ToString("g")</small>
+                        <div class="mt-1">
+                            @if (!string.IsNullOrEmpty(n.Message))
+                            {
+                                @n.Message
+                            }
+                            else
+                            {
+                                
+                                @switch (n.Type)
+                                {
+                                    case NotificationType.Follow:
+                                        <text>User followed you</text>
+                                        break;
+                                    case NotificationType.Comment:
+                                        <text>New comment on your post</text>
+                                        break;
+                                    case NotificationType.Reaction:
+                                        <text>Someone reacted to your post</text>
+                                        break;
+                                    case NotificationType.GroupRequest:
+                                        <text>New group join request</text>
+                                        break;
+                                    default:
+                                        <text>Notification</text>
+                                        break;
+                                }
+                            }
+                        </div>
+
+                        @* optional quick link if reference exists (assumes numeric post ids) *@
+                        @if (!string.IsNullOrEmpty(n.ReferenceId))
+                        {
+                            <div class="mt-1">
+                                @if (n.Type == NotificationType.Comment || n.Type == NotificationType.Reaction)
+                                {
+                                    <a class="link-secondary" href="@Url.Action("Details", "Post", new { id = n.ReferenceId })">View post</a>
+                                }
+                                else if (n.Type == NotificationType.GroupRequest)
+                                {
+                                    <a class="link-secondary" href="@Url.Action("GroupProfile", "Groups", new { id = n.ReferenceId })">View group</a>
+                                }
+                            </div>
+                        }
+                    </div>
+
+                    <div class="ms-3 d-flex flex-column align-items-end">
+                        <form asp-controller="Notifications" asp-action="Delete" method="post" asp-route-id="@n.Id">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-sm btn-outline-secondary mb-1">Mark read</button>
+                        </form>
+
+                        
+                        @if (n.Type == NotificationType.Follow || n.Type == NotificationType.GroupRequest)
+                        {
+                            <form asp-controller="Notifications" asp-action="Accept" method="post" asp-route-id="@n.Id">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-success">Accept</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <form asp-controller="Notifications" asp-action="Delete" method="post" asp-route-id="@n.Id">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-primary">Open</button>
+                            </form>
+                        }
+                    </div>
+                </li>
+            }
+        </ul>
+    }
+</div>

@@ -33,6 +33,7 @@ namespace OSSocial.Controllers
             if (ModelState.IsValid) // verifica datele 
             {
                 db.Comments.Add(comentariu);
+                
                 db.SaveChanges();
                 return Redirect("/Post/Details/" + comentariu.PostId); // afiseaza postarea dupa adaugarea comentariului
             }
@@ -48,9 +49,8 @@ namespace OSSocial.Controllers
         [HttpPost("Delete/{id}")]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "User,Editor,Admin")]
-        public IActionResult Delete(int id, string? returnUrl)
+        public IActionResult Delete(int id)
         {
-            // Load comment including its Post to safely access post owner and postId
             Comment? comentariu = db.Comments
                 .Include(c => c.Post)
                 .FirstOrDefault(c => c.Id == id);
@@ -74,12 +74,7 @@ namespace OSSocial.Controllers
             {
                 db.Comments.Remove(comentariu);
                 db.SaveChanges();
-
-                // Prefer returning to a provided local returnUrl (the view includes one), otherwise go to Post/Details
-                if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
-                {
-                    return Redirect(returnUrl);
-                }
+                
 
                 return RedirectToAction("Details", "Post", new { id = postId });
             }
