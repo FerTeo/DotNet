@@ -92,75 +92,68 @@ namespace OSSocial.Controllers
             }
         }
 
-        // Edit comment 
+        
         [HttpGet("Edit/{id}")]
         [Authorize(Roles = "User,Editor,Admin")]
         public IActionResult Edit(int id)
         {
-            Comment? comentariu = db.Comments.Find(id);
+            var comentariu = db.Comments
+                .Include(c => c.Post)
+                .FirstOrDefault(c => c.Id == id);
 
-            if (comentariu == null)
-            {
-                return NotFound();
-            }
-            else
-            {
-                if (comentariu.UserId == _userManager.GetUserId(User)
-                    || User.IsInRole("Admin")
-                    || comentariu.Post.UserId == _userManager.GetUserId(User))
-                {
-                    return View(comentariu);
-                }
-                else
-                {
-                    TempData["message"] = "Can't delete a comment that isn't yours!";
-                    TempData["messageType"] = "alert-danger";
+            if (comentariu == null) return NotFound();
 
-                    return RedirectToAction("Index", "Post");
-                }
+            var currentUserId = _userManager.GetUserId(User);
+            var postOwnerId = comentariu.Post?.UserId;
+
+            if (comentariu.UserId != currentUserId && !User.IsInRole("Admin") && postOwnerId != currentUserId)
+            {
+                return Forbid();
             }
+
+            var redirectUrl = Url.Action("Details", "Post", new { id = comentariu.PostId, edit = id }) + "#comment-" + id;
+            return Redirect(redirectUrl);
         }
 
         [HttpPost("Edit/{id}")]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "User,Editor,Admin")]
         public IActionResult Edit(int id, Comment comentariu)
         {
-            Comment? comentariuDeModificat = db.Comments.Find(id);
+            Comment? comentariuDeModificat = db.Comments
+                .Include(c => c.Post)
+                .FirstOrDefault(c => c.Id == id);
 
             if (comentariuDeModificat == null)
             {
                 return NotFound();
             }
-            else
-            {
-                // comentariul poate fi modficat doar de persoana care l-a scris
-                if (comentariuDeModificat.UserId == _userManager.GetUserId(User))
-                {
-                    
-                    ModelState.Remove(nameof(comentariu.Post));
-                    ModelState.Remove(nameof(comentariu.User));
-                    ModelState.Remove(nameof(comentariu.UserId));
-                    ModelState.Remove(nameof(comentariu.PostId));
-                    
-                    if (ModelState.IsValid)
-                    {
-                        comentariuDeModificat.Content = comentariu.Content;
-                        db.SaveChanges();
-                        return Redirect("/Post/Details/" + comentariuDeModificat.PostId);
-                    }
-                    else
-                    {
-                        return View("Edit", comentariu);
-                    }
-                }
-                else
-                {
-                    TempData["message"] = "Can't edit a comment that isn't yours!";
-                    TempData["messageType"] = "alert-danger";
 
-                    return RedirectToAction("Index", "Post");
-                }
+            var currentUserId = _userManager.GetUserId(User);
+            var postOwnerId = comentariuDeModificat.Post?.UserId;
+
+            if (comentariuDeModificat.UserId != currentUserId && !User.IsInRole("Admin") && postOwnerId != currentUserId)
+            {
+                return Forbid();
             }
+
+            ModelState.Remove(nameof(comentariu.Post));
+            ModelState.Remove(nameof(comentariu.User));
+            ModelState.Remove(nameof(comentariu.UserId));
+            ModelState.Remove(nameof(comentariu.PostId));
+
+            if (!ModelState.IsValid)
+            {
+                // Redirect back to details showing the edit form again
+                var errorRedirect = Url.Action("Details", "Post", new { id = comentariuDeModificat.PostId, edit = id }) + "#comment-" + id;
+                return Redirect(errorRedirect);
+            }
+
+            comentariuDeModificat.Content = comentariu.Content;
+            db.SaveChanges();
+
+            var redirect = Url.Action("Details", "Post", new { id = comentariuDeModificat.PostId }) + "#comment-" + comentariuDeModificat.Id;
+            return Redirect(redirect);
         }
     }
 }

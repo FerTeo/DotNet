@@ -50,7 +50,7 @@ namespace OSSocial.Controllers
         }
 
         [HttpGet("Details/{id}")] // GET /Post/Details/5
-        public IActionResult Details(int id)
+        public IActionResult Details(int id, int? edit)
         {
             Post? postare = db.Posts
                 .Include(p => p.User)                    // Include Post Author
@@ -74,49 +74,57 @@ namespace OSSocial.Controllers
                 ViewBag.CurrentUserId = null;
                 ViewBag.EsteAdmin = false;
             }
+
             
-            return View(postare);
-        }
-        
-        private bool HelperCheckAcceptedPost(ref Post postare, ContentResult analysisResult)
-        {
-            // Cazul ideal: API-ul a răspuns cu succes
-            if (analysisResult.Success)
-            {
-                if (analysisResult.IsAccepted)
-                {
-                    postare.ContainsInappropriateContent = false;
-                    postare.InappropriateContentReason = null;
-                    postare.DateReviewed = DateTime.Now;
-                    return true;
-                }
-                else
-                {
-                    // API-ul a zis NU -> Blocăm
-                    return false;
-                }
-            }
-    
-            // Cazul de eroare (API picat/cheie greșită/parse error)
-            ModelState.AddModelError(string.Empty, $"Eroare filtru AI: {analysisResult.ErrorMessage}");
-            return false; // <--- MODIFICARE: Blochează postarea dacă AI-ul nu merge
-        }
-        
-        [Authorize] // necesar ca user-ul sa fie logat, altfel nu poate crea o postare
-        [HttpGet("CreatePost")] // GET /Post/CreatePost - returneaza formularul
-        public IActionResult CreatePost() // ar tb sa returneze un formular
-        {
-            return View();
-        }
+            // daca se editeaza un comentariu, paseaza edit id-ul
+            ViewBag.EditCommentId = edit;
+             
+             return View(postare);
+         }
+         
+         private bool HelperCheckAcceptedPost(ref Post postare, ContentResult analysisResult)
+         {
+             // Cazul ideal: API-ul a răspuns cu succes
+             if (analysisResult.Success)
+             {
+                 if (analysisResult.IsAccepted)
+                 {
+                     postare.ContainsInappropriateContent = false;
+                     postare.InappropriateContentReason = null;
+                     postare.DateReviewed = DateTime.Now;
+                     return true;
+                 }
+                 else
+                 {
+                     // API-ul a zis NU -> Blocăm
+                     return false;
+                 }
+             }
+
+             // Cazul de eroare (API picat/cheie greșită/parse error)
+             ModelState.AddModelError(string.Empty, $"Eroare filtru AI: {analysisResult.ErrorMessage}");
+             return false; // <--- MODIFICARE: Blochează postarea dacă AI-ul nu merge
+         }
+
+         [Authorize] // necesar ca user-ul sa fie logat, altfel nu poate crea o postare
+         [HttpGet("CreatePost")] // GET /Post/CreatePost - returneaza formularul
+         public IActionResult CreatePost() // ar tb sa returneze un formular
+         {
+             return View();
+         }
 
         [HttpPost("CreatePost")]
         [Authorize] // te trimite direct la login daca nu esti logat!!
-        public async Task<IActionResult> CreatePost(Post postare, IFormFile Image) // removed Group? group parameter
+        public async Task<IActionResult> CreatePost(Post postare, IFormFile image) // removed Group? group parameter
         { 
             // time and userId set automatically 
             postare.Time = DateTime.Now;
             
             var currentUserId = _userManager.GetUserId(User);
+            if (currentUserId == null)
+            {
+                return BadRequest();
+            }
             postare.UserId = currentUserId;
 
             // validare/ clear validation errors
@@ -165,12 +173,12 @@ namespace OSSocial.Controllers
             ViewBag.EsteAdmin = User.IsInRole("Admin");
 
             // pentru fisiere media
-            if (Image != null && Image.Length > 0)
+            if (image != null && image.Length > 0)
             {
                 // info din articles app lab 9
                 // verif extensie
                 var allowedExtension = new[] { ".jpg", ".jpeg", ".png", ".gif", ".mp4", ".mov" };
-                var fileExtrension = Path.GetExtension(Image.FileName).ToLower();
+                var fileExtrension = Path.GetExtension(image.FileName).ToLower();
 
                 if (!allowedExtension.Contains(fileExtrension))
                 {
@@ -187,7 +195,7 @@ namespace OSSocial.Controllers
                     Directory.CreateDirectory(webRootPath);
                 }
                 
-                var uniqueFileName = Guid.NewGuid().ToString() + "_" + Image.FileName;
+                var uniqueFileName = Guid.NewGuid().ToString() + "_" + image.FileName;
                 
                 var filePath = Path.Combine(webRootPath, uniqueFileName); // local save path
                 var dbPath = "/images/" + uniqueFileName; // db save path
@@ -196,7 +204,7 @@ namespace OSSocial.Controllers
                 using (var fileStream = new FileStream(filePath, System.IO.FileMode.Create))
                 {
                     // await only used on async methods!
-                    await Image.CopyToAsync(fileStream);
+                    await image.CopyToAsync(fileStream);
                 }
                 
                 ModelState.Remove(nameof(postare.Media));

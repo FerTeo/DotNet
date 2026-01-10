@@ -1,0 +1,76 @@
+@{
+
+    bool userLogat = false;
+    var settingsUrl = Url.Page("/Account/Login", new { area = "Identity" });
+
+    if (User?.Identity?.IsAuthenticated ?? false)
+    {
+        userLogat = true;
+        settingsUrl = Url.Page("/Account/Manage/Index", new { area = "Identity" });
+    }
+
+    // detectam controllerul curent pentru a vedea ce applicatie e activa
+    var currentController = (ViewContext.RouteData.Values["controller"] as string ?? string.Empty);
+    var currentAction = (ViewContext.RouteData.Values["action"] as string ?? string.Empty);
+    var currentArea = (ViewContext.RouteData.Values["area"] as string ?? string.Empty).ToLowerInvariant();
+    
+
+    var isPhotosApp = currentController?.ToLowerInvariant() == "post"; 
+    var isProfilesApp = currentController?.ToLowerInvariant() == "profiles" || currentAction?.ToLowerInvariant() == "show";
+    var isSettingsApp = currentArea?.ToLowerInvariant() == "identity";
+                            
+}
+<nav class="navbar navbar-light bg-white border-top fixed-bottom" role="navigation" aria-label="Dock navigation">
+    <div class="container d-flex justify-content-center">
+        <ul class="nav">
+            <li class="nav-item mx-2">
+                <a class="nav-link text-center" asp-controller="Home" asp-action="Index" title="Home" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Home" aria-label="Home">
+                    <img src="@Url.Content("~/assets/icons/house.svg")" alt="Home" width="36" height="36" />
+                </a>
+            </li>
+                
+            <li class="nav-item mx-2">
+                <a class="nav-link text-center" asp-controller="Groups" asp-action="Explore" title="Explore" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Explore" aria-label="Explore">
+                    <img src="@Url.Content("~/assets/icons/search-heart.svg")" alt="Groups" width="36" height="36" />
+                </a>
+            </li>
+                
+            <li class="nav-item mx-2">
+                <a class="nav-link text-center" asp-controller="Groups" asp-action="" title="Groups" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Groups" aria-label="Groups">
+                    <img src="@Url.Content("~/assets/icons/folder.svg")" alt="Home" width="36" height="36" />
+                </a>
+            </li>
+
+            <li class="nav-item mx-2">
+                <a class="nav-link text-center @(isPhotosApp ? "active-app" : "")" asp-controller="Post" asp-action="Feed" title="Feed" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Feed" aria-label="Feed">
+                    <img src="@Url.Content("~/assets/icons/images.svg")" alt="Feed" width="36" height="36"/>
+                </a>
+            </li>
+
+            <li class="nav-item mx-2">
+                <a class="nav-link text-center @(isProfilesApp ? "active-app" : "")" asp-controller="Profiles" asp-action="Index" title="Users" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Users" aria-label="Users">
+                    <img src="@Url.Content("~/assets/icons/people-fill.svg")" alt="Users" width="36" height="36"/>
+                </a>
+            </li>
+                
+                
+            <li class="nav-item mx-2">
+                <a class="nav-link text-center @(isSettingsApp? "active-app" : "")" href="@settingsUrl" title="Settings" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Settings" aria-label="Settings">
+                    <img src="@Url.Content("~/assets/icons/gear.svg")" alt="Settings" width="36" height="36"/>
+                </a>
+            </li>
+                
+            @if (userLogat)
+            {
+                <li class="nav-item mx-2">
+                    <form  class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                        <button type="submit" class="nav-link text-center" title="Logout" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Logout" aria-label="Settings">
+                            <img src="@Url.Content("~/assets/icons/box-arrow-left.svg")" alt="Logout" width="36" height="36"/>
+                        </button>
+                    </form>
+                </li>
+            }
+
+        </ul>
+    </div>
+</nav>
