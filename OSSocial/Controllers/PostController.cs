@@ -1,11 +1,13 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using OSSocial.Data;
 using OSSocial.Models;
+using OSSocial.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
-
+using ContentResult = OSSocial.Services.ContentResult;
 
 namespace OSSocial.Controllers
 {
@@ -14,8 +16,22 @@ namespace OSSocial.Controllers
         UserManager<ApplicationUser> _userManager,
         ApplicationDbContext _context) : Controller
     {
-        private readonly ApplicationDbContext db = _context;
-        private readonly UserManager<ApplicationUser> userManager = _userManager;
+        private readonly ApplicationDbContext db;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly IContentAnalysisService _contentService;
+
+        public PostController(
+            ApplicationDbContext context,
+            UserManager<ApplicationUser> userManager, 
+            RoleManager<IdentityRole> roleManager, 
+            IContentAnalysisService contentService)
+        {
+            db = context;
+            _userManager = userManager;
+            _roleManager = roleManager;
+            _contentService = contentService;
+        }
 
         [HttpGet("")]
         public IActionResult Index()
@@ -73,7 +89,7 @@ namespace OSSocial.Controllers
         }
 
         [HttpGet("Details/{id}")] // GET /Post/Details/5
-        public IActionResult Details(int id)
+        public IActionResult Details(int id, int? edit)
         {
             Post? postare = db.Posts
                 .Include(p => p.User)                    // Include Post Author
@@ -97,39 +113,111 @@ namespace OSSocial.Controllers
                 ViewBag.CurrentUserId = null;
                 ViewBag.EsteAdmin = false;
             }
-            
-            return View(postare);
-        }
 
-        [Authorize] // necesar ca user-ul sa fie logat, altfel nu poate crea o postare
-        [HttpGet("CreatePost")] // GET /Post/CreatePost - returneaza formularul
-        public IActionResult CreatePost() // ar tb sa returneze un formular
-        {
-            return View();
-        }
+            
+            // daca se editeaza un comentariu, paseaza edit id-ul
+            ViewBag.EditCommentId = edit;
+             
+             return View(postare);
+         }
+         
+         private bool HelperCheckAcceptedPost(ref Post postare, ContentResult analysisResult)
+         {
+             // Cazul ideal: API-ul a răspuns cu succes
+             if (analysisResult.Success)
+             {
+                 if (analysisResult.IsAccepted)
+                 {
+                     postare.ContainsInappropriateContent = false;
+                     postare.InappropriateContentReason = null;
+                     postare.DateReviewed = DateTime.Now;
+                     return true;
+                 }
+                 else
+                 {
+                     // API-ul a zis NU -> Blocăm
+                     return false;
+                 }
+             }
+
+             // Cazul de eroare (API picat/cheie greșită/parse error)
+             ModelState.AddModelError(string.Empty, $"Eroare filtru AI: {analysisResult.ErrorMessage}");
+             return false; // <--- MODIFICARE: Blochează postarea dacă AI-ul nu merge
+         }
+
+         [Authorize] // necesar ca user-ul sa fie logat, altfel nu poate crea o postare
+         [HttpGet("CreatePost")] // GET /Post/CreatePost - returneaza formularul
+         public IActionResult CreatePost() // ar tb sa returneze un formular
+         {
+             return View();
+         }
 
         [HttpPost("CreatePost")]
         [Authorize] // te trimite direct la login daca nu esti logat!!
-        public async Task<IActionResult> CreatePost(Post postare, IFormFile Image) // removed Group? group parameter
+        public async Task<IActionResult> CreatePost(Post postare, IFormFile image) // removed Group? group parameter
         { 
             // time and userId set automatically 
             postare.Time = DateTime.Now;
             
-            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var currentUserId = _userManager.GetUserId(User);
+            if (currentUserId == null)
+            {
+                return BadRequest();
+            }
             postare.UserId = currentUserId;
 
             // validare/ clear validation errors
             ModelState.Remove(nameof(postare.UserId));
             ModelState.Remove(nameof(postare.Time));
             ModelState.Remove(nameof(postare.Group));
+            
+            // pt a posta ceva tb atat titlul cat si continutul sa fie adecvate
+            // pe viitor ar tb implementat si analiza video dar...
+            
+            // pt ca am primit eroarea "TooManyRequests" .. faceam separat verificarea pentru titlu si content.... 
+            // unesc titlu si continutul ca sa nu mai primesc aceasta eroare....
+            string textToAnalyze = $"Title: {postare.Title}\nContent: {postare.Content}";
+            
+            // apel catre API facut doar pe text empty
+            if (!string.IsNullOrWhiteSpace(textToAnalyze))
+            {
+                var analysisResult = await _contentService.AnalyzeContentAsync(textToAnalyze);
+
+                if (!HelperCheckAcceptedPost(ref postare, analysisResult))
+                {
+                    string errorMessage;
+                    
+                    if (!analysisResult.Success)
+                    {
+                        // eroare tehnica (ex: TooManyRequests)
+                        errorMessage = $"{analysisResult.ErrorMessage}. Please wait a moment and try again.";
+                    }
+                    else
+                    {
+                        // respins de AI (continut vulgar)
+                        errorMessage = $"Post rejected: {analysisResult.Reason}";
+                    }
+
+                    ViewBag.ContinutInadecvat = errorMessage;
+                    
+                    // debug info ca admin!
+                    ViewBag.EsteAdmin = User.IsInRole("Admin");
+                    ViewBag.ApiIsAccepted = $"{analysisResult.IsAccepted}";
+                    ViewBag.ApiErrorMessage = $"{analysisResult.ErrorMessage}";
+
+                    return View(postare);
+                }
+            }
+            
+            ViewBag.EsteAdmin = User.IsInRole("Admin");
 
             // pentru fisiere media
-            if (Image != null && Image.Length > 0)
+            if (image != null && image.Length > 0)
             {
                 // info din articles app lab 9
                 // verif extensie
                 var allowedExtension = new[] { ".jpg", ".jpeg", ".png", ".gif", ".mp4", ".mov" };
-                var fileExtrension = Path.GetExtension(Image.FileName).ToLower();
+                var fileExtrension = Path.GetExtension(image.FileName).ToLower();
 
                 if (!allowedExtension.Contains(fileExtrension))
                 {
@@ -146,7 +234,7 @@ namespace OSSocial.Controllers
                     Directory.CreateDirectory(webRootPath);
                 }
                 
-                var uniqueFileName = Guid.NewGuid().ToString() + "_" + Image.FileName;
+                var uniqueFileName = Guid.NewGuid().ToString() + "_" + image.FileName;
                 
                 var filePath = Path.Combine(webRootPath, uniqueFileName); // local save path
                 var dbPath = "/images/" + uniqueFileName; // db save path
@@ -155,7 +243,7 @@ namespace OSSocial.Controllers
                 using (var fileStream = new FileStream(filePath, System.IO.FileMode.Create))
                 {
                     // await only used on async methods!
-                    await Image.CopyToAsync(fileStream);
+                    await image.CopyToAsync(fileStream);
                 }
                 
                 ModelState.Remove(nameof(postare.Media));
@@ -173,7 +261,7 @@ namespace OSSocial.Controllers
                 var group = db.Groups.Find(groupId);
                 if (group != null)
                 {
-                    // allow redirect only if the group is public or the user is a member/owner/admin
+                    // allow posting user to be redirected to the group page if they have access
                     // reuse the currentUserId from above
                     var creatorUserId = currentUserId;
 
@@ -181,7 +269,7 @@ namespace OSSocial.Controllers
                     bool isOwner = group.UserId == creatorUserId;
                     bool isMember = db.GroupMembers.Any(gm => gm.GroupId == groupId && gm.UserId == creatorUserId);
 
-                    if (group.IsPublic || isAdmin || isOwner || isMember)
+                    if (isAdmin || isOwner || isMember)
                     {
                         return RedirectToAction("GroupProfile", "Groups", new { id = groupId });
                     }

@@ -63,15 +63,8 @@ namespace OSSocial.Controllers
                     .Where(g => g.UserId == currentUserId || g.Members.Any(m => m.UserId == currentUserId))
                     .ToList();
                 
-                if (!groups.Any())
-                {
-                    return NotFound();
-                }
-                else
-                {
                     ViewBag.Groups = groups;
                     return View();
-                }
             }
             else
             {
@@ -79,6 +72,22 @@ namespace OSSocial.Controllers
                 TempData["messageType"] = "alert-danger";
                 return RedirectToAction("Index", "Post");
             }
+        }
+        
+        [HttpGet("Explore")]
+        public IActionResult Explore()
+        {
+            SetAccessRights();
+
+            var publicGroups = db.Groups
+                .Include(g => g.Members)
+                .Include(g => g.User)
+                .Where(g => g.IsPublic)
+                .ToList();
+
+            ViewBag.PublicGroups = publicGroups;
+
+            return View();
         }
         
         // show all posts on a group's profile page
@@ -114,6 +123,14 @@ namespace OSSocial.Controllers
             ViewBag.IsMember = isMember;
             ViewBag.IsOwner = isOwner;
             ViewBag.EsteAdmin = isAdmin;
+            
+            // pt a afisa toti membrii grupului
+            var member = db.GroupMembers 
+                .Include(gm => gm.User)
+                .Where(gm => gm.GroupId == group.Id)
+                .ToList();
+            
+            ViewBag.Members = member;
 
             return View(group);
         }
@@ -132,11 +149,19 @@ namespace OSSocial.Controllers
         [Authorize(Roles = "Admin, User, Editor")]
         public IActionResult Create(Group group)
         {
+            // owner 
             group.UserId = _userManager.GetUserId(User);
 
             if (ModelState.IsValid)
             {
                 db.Groups.Add(group);
+                db.SaveChanges();
+                
+                // also need to add owner member entry
+                GroupMember groupMember = new GroupMember(_userManager.GetUserId(User), group.Id);
+                groupMember.IsModerator = true;
+                
+                db.GroupMembers.Add(groupMember);
                 db.SaveChanges();
                 
                 TempData["message"] = "Group created successfully :P";
@@ -148,6 +173,114 @@ namespace OSSocial.Controllers
             {
                 return View(group);
             }
+        }
+        
+        // functionalitatea propriu-zisa de a da join intr-un grup
+        // poti da join unui grup doar daca esti logat
+        [HttpPost("JoinGroup")]
+        [Authorize(Roles =  "Admin, User, Editor")]
+        public IActionResult JoinGroup(int GroupId)
+        {
+            var group = db.Groups.Find(GroupId);
+            if (group == null)
+            {
+                TempData["message"] = "Group not found";
+                TempData["messageType"] = "alert-danger";
+                return RedirectToAction("Explore");
+            }
+
+            var currentUserId = _userManager.GetUserId(User);
+
+            // check if already a member
+            bool isAlreadyMember = db.GroupMembers.Any(gm => gm.GroupId == GroupId && gm.UserId == currentUserId);
+            if (isAlreadyMember)
+            {
+                TempData["message"] = "You are already a member of this group.";
+                TempData["messageType"] = "alert-info";
+                return RedirectToAction("GroupProfile", new { id = GroupId });
+            }
+
+            GroupMember newMember = new GroupMember(currentUserId, group.Id);
+            db.GroupMembers.Add(newMember);
+            db.SaveChanges();
+
+            TempData["message"] = "You have joined the group!";
+            TempData["messageType"] = "alert-success";
+            return RedirectToAction("GroupProfile", new { id = GroupId });
+        }
+
+        [HttpPost("LeaveGroup")]
+        [Authorize(Roles = "Admin, User, Editor")]
+        public IActionResult LeaveGroup(int GroupId)
+        {
+            var group = db.Groups.Find(GroupId);
+
+            if (group == null)
+            {
+                TempData["message"] = "Group not found";
+                TempData["messageType"] = "alert-danger";
+                return RedirectToAction("Explore");
+            }
+            
+            var currentUserId = _userManager.GetUserId(User);
+            
+            // owner-ul nu iese din grup, il sterge
+            var isOwner = group.UserId == currentUserId;
+            
+            // un membru ar trebui sa poata iesi din grup normal
+            var membership = db.GroupMembers.FirstOrDefault(gm => gm.GroupId == GroupId && gm.UserId == currentUserId);
+
+            if (membership == null)
+            {
+                TempData["message"] = "You are not a member of this group.";
+                TempData["messageType"] = "alert-danger";
+                return RedirectToAction("GroupProfile", new { id = GroupId });
+            }
+            else
+            if (isOwner) // daca e owner, sterge grupul
+            {
+                // ca sa stergi un entry din tabel MAI INTAI STERGI TOT CE E LEGAT DE EL
+                // (ma intrebam de ce imi da eroare ...)
+                
+                // sterge postarile asociate grupului
+                var groupPosts = db.Posts.Where(p => p.GroupId == GroupId).ToList();
+                if (groupPosts.Any())
+                {
+                    db.Posts.RemoveRange(groupPosts);
+                }
+
+                // sterge membrii grupului (intrarile din tabela asociativa GroupMembers)
+                var groupMembers = db.GroupMembers.Where(gm => gm.GroupId == GroupId).ToList();
+                if (groupMembers.Any())
+                {
+                    db.GroupMembers.RemoveRange(groupMembers);
+                }
+                
+                db.Groups.Remove(group);
+                db.SaveChanges();   
+                
+                TempData["message"] = "Group deleted :(";
+                return RedirectToAction("Explore");
+            }
+            else // doar membru simplu
+            {
+                db.GroupMembers.Remove(membership);
+                db.SaveChanges();
+                
+                TempData["message"] = "Officially left the group...";
+            }
+            
+            // can see public groups after leaving
+            // grupurile private tho nu pot fi vazute 
+            if (group.IsPublic)
+            {
+                return RedirectToAction("GroupProfile", new { id = GroupId });
+            }
+            else
+            {
+                return RedirectToAction("Explore");
+            }
+            
         }
         
         // ca sa afisezi butoane de editare/ stergere in view

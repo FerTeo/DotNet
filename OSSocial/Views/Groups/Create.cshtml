@@ -2,29 +2,34 @@
 
 <br />
 
-<h2 class= "mb-5 text-center">Create a new Group</h2>
+<h2 class="mb-5 text-center">Create a new Group</h2>
 
 <br />
 
-<form asp-action="Create" asp-controller="Groups" method="post">
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <form asp-action="Create" asp-controller="Groups" method="post">
 
-    <label asp-for="Name">Group name</label>
-    <br />
-    <input asp-for="Name" class="form-control" />
-    <span asp-validation-for="Name" class="text-danger"></span>
-    <br />
-    
-    <label asp-for="Description">Describe your group:</label>
-    <br />
-    <input asp-for="Description" class="form-control" />
-    <br />
-    
-    <label asp-for="IsPublic">Is this group public?</label>
-    <br/>   
-    <input type="checkbox" asp-for="IsPublic" class="form-control"/>
-    
-    <br />
+                <label asp-for="Name">Group name</label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+                <br />
+                
+                <label asp-for="Description">Describe your group:</label>
+                <input asp-for="Description" class="form-control" />
+                <br />
+                
+                <div class="form-check mb-3">
+                    <input type="checkbox" asp-for="IsPublic" class="form-check-input" id="publicCheck"/>
+                    <label class="form-check-label" for="publicCheck">
+                        Is this group public?
+                    </label>
+                </div>
 
-    <button type="submit" class="btn btn-success">Create Group</button>
+                <button type="submit" class="btn btn-success">Create Group</button>
 
-</form>
+            </form>
+        </div>
+    </div>
+</div>

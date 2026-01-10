@@ -27,6 +27,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://0.0.0.0:8080
       - ConnectionStrings__DefaultConnection=Server=db;Port=3306;Database=${MYSQL_DATABASE:-OS_DB};User=${MYSQL_USER:-appuser};Password=${MYSQL_PASSWORD:-apppass};
+      - GoogleAi__ApiKey=${GOOGLE_API_KEY}
     ports:
       - "${APP_PORT:-8080}:8080"
     volumes:

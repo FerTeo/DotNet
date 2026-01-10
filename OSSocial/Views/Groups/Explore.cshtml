@@ -1,0 +1,30 @@
+<div class="row">
+
+    @foreach (var group in ViewBag.PublicGroups)
+    {
+        <div class="col-4 mb-4">
+
+            <div class="card">
+
+                <div class="card-body">
+                    
+                    <h5 class="card-title" name="Name">@group.Name</h5>
+
+                    @if (ViewBag.EsteAdmin)
+                    {
+                        <div>
+                            <i class="bi bi-person"> Owned by: </i> 
+                            @(group.User?.UserName ?? "Unknown Owner")
+                        </div>
+                        
+                    }        
+                    <br />
+
+                    <a asp-controller="Groups" asp-action="GroupProfile" asp-route-id="@group.Id" class="btn btn-dark">Show group profile</a>
+
+                </div>
+            </div>
+        </div>
+    }
+
+</div>

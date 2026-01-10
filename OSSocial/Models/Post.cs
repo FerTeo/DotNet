@@ -10,7 +10,9 @@ namespace OSSocial.Models
         [Key]
         public int Id { get; set; }
 
-        public string Title { get; set; }
+
+        [Required(ErrorMessage = "oops .. the post need a title!")]
+        public string? Title { get; set; }
 
         [Required(ErrorMessage = "oops... seems you're uploading a post without a content :(")]
         public string? Content { get; set; }
@@ -19,7 +21,7 @@ namespace OSSocial.Models
         public DateTime Time { get; set; }
 
         [NotMapped]// documentation: "Denotes that a property or class should be excluded from database mapping."
-        public string formattedTime
+        public string FormattedTime
         {
             get { return Time.ToString("HH:mm"); }
         }
@@ -52,6 +54,17 @@ namespace OSSocial.Models
         public int? GroupId { get; set; }
         
         public virtual Group? Group { get; set; }
+        
+        // implementare GeminiAi
+        // atribute pentru verificarea daca o postare contine content neadecvat
+        // daca poate fi postat sau nu
+        public bool ContainsInappropriateContent { get; set; } = false;
+        
+        // motivul pt care NU ar putea fi postat  
+        public string? InappropriateContentReason { get; set; } = null;
+        
+        // data la care a fost revizuit continutul postarii de catre GeminiAi
+        public DateTime? DateReviewed { get; set; } = null;
     }    
 }
 

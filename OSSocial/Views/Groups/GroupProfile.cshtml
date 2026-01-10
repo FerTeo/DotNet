@@ -23,41 +23,75 @@
                 <footer class="blockquote-footer">Created by <cite title="Source Title">@Model.User.UserName</cite></footer>
             }
         </div>
+        
+        @* JOIN GROUP button (daca esti admin poti intra in orice grup!) *@
+        @if (ViewBag.IsMember != true && (Model.IsPublic || ViewBag.EsteAdmin == true))
+        {
+            <div class="card-footer">
+                <form method="post" asp-controller="Groups" asp-action="JoinGroup">
+                    <input type="hidden" name="GroupId" value="@Model.Id" />
+                    <button type="submit" class="btn btn-primary">Join Group</button>
+                </form>
+            </div>
+        }
+        @* LEAVE GROUP button *@
+        else
+        if (ViewBag.IsMember == true && ViewBag.IsOwner == false)
+        {
+            <div class="card-footer">
+                <form method="post" asp-controller="Groups" asp-action="LeaveGroup">
+                    <input type="hidden" name="GroupId" value="@Model.Id" />
+                    <button type="submit" class="btn btn-danger">Leave Group</button>
+                </form>
+            </div>
+        }
+        else if (ViewBag.IsOwner == true)
+        {
+            <div class="card-footer">
+                <form method="post" asp-controller="Groups" asp-action="LeaveGroup">
+                    <input type="hidden" name="GroupId" value="@Model.Id" />
+                    <button type="submit" class="btn btn-danger">Delete Group</button>
+                </form>
+            </div>
+        }
     </div>
 
     @* ZONA DE POSTARE (Doar pentru membrii) *@
     @* Verificam in controller drepturile, dar e bine sa ascundem si vizual *@
-    <div class="row mb-5">
-        <div class="col-md-8 offset-md-2">
-            <div class="card">
-                <div class="card-body">
-                    <h5>Post something!</h5>
+    @if (ViewBag.IsMember == true)
+    {
+        <div class="row mb-5">
+            <div class="col-md-8 offset-md-2">
+                <div class="card">
+                    <div class="card-body">
+                        <h5>Post something!</h5>
                     
-                    @* Formularul trimite catre PostController -> CreatePost *@
-                    <form method="post" asp-controller="Post" asp-action="CreatePost" enctype="multipart/form-data">
+                        @* Formularul trimite catre PostController -> CreatePost *@
+                        <form method="post" asp-controller="Post" asp-action="CreatePost" enctype="multipart/form-data">
                         
-                        @* CRITIC: Trimitem ID-ul grupului ascuns *@
-                        <input type="hidden" name="GroupId" value="@Model.Id" />
+                            @* CRITIC: Trimitem ID-ul grupului ascuns *@
+                            <input type="hidden" name="GroupId" value="@Model.Id" />
                         
-                        <br/>
-                        <input type="text" name="Title" style="margin-bottom: 10px"/>
-                        <br/>
+                            <br/>
+                            <input type="text" name="Title" style="margin-bottom: 10px"/>
+                            <br/>
                         
-                        <div class="form-group mb-3">
-                            <textarea name="Content" class="form-control" rows="3" placeholder="What's on your mind?"></textarea>
-                        </div>
+                            <div class="form-group mb-3">
+                                <textarea name="Content" class="form-control" rows="3" placeholder="What's on your mind?"></textarea>
+                            </div>
                         
-                        <br/>
-                        <input type="file" name="Image" class="form-control" accept="image/*,video/*" />
-                        <br/>
+                            <br/>
+                            <input type="file" name="Image" class="form-control" accept="image/*,video/*" />
+                            <br/>
                         
-                        <button type="submit" class="btn btn-primary btn-sm">Post to Group</button>
-                    </form>
+                            <button type="submit" class="btn btn-primary btn-sm">Post to Group</button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-
+    }
+    
     <hr />
 
     @* LISTA POSTARILOR DIN GRUP *@
@@ -76,7 +110,7 @@
                                     <i class="bi bi-person-circle fs-4 me-2"></i>
                                     <strong>@(post.User?.UserName ?? "Unknown User")</strong>
                                 </div>
-                                <small class="text-muted">@post.formattedTime</small>
+                                <small class="text-muted">@post.FormattedTime</small>
                             </div>
                             
                             <p class="card-text">@post.Content</p>
@@ -106,4 +140,19 @@
             </div>
         }
     </div>
+</div>
+
+@* LISTA MEMBRILOR DIN GRUP *@
+<div class="col-md-8 offset-md-2 mb-4">
+    <div>
+        <h4 class="mt-5">Other Members</h4>
+        <ul>
+        @foreach (var member in ViewBag.Members)
+        {
+            <li>
+                <i class="bi bi-person"></i> @(member.User?.UserName ?? "Unknown User")
+            </li>
+            }
+        </ul> 
+        </div>
 </div>
