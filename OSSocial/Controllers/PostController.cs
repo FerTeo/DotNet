@@ -6,12 +6,15 @@ using OSSocial.Data;
 using OSSocial.Models;
 using OSSocial.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 using ContentResult = OSSocial.Services.ContentResult;
 
 namespace OSSocial.Controllers
 {
     [Route("Post")]
-    public class PostController : Controller
+    public class PostController (
+        UserManager<ApplicationUser> _userManager,
+        ApplicationDbContext _context) : Controller
     {
         private readonly ApplicationDbContext db;
         private readonly UserManager<ApplicationUser> _userManager;
@@ -33,20 +36,56 @@ namespace OSSocial.Controllers
         [HttpGet("")]
         public IActionResult Index()
         {
-            return RedirectToAction("Feed");
+            return RedirectToAction("Explore");
         }
 
-        [HttpGet("Feed")] // GET /Post/Feed
-        public IActionResult Feed()
+        [HttpGet("Explore")] // GET /Post/Explore
+        public IActionResult Explore()
         {
             // practic functie de index dar in social media terms 
-            var posts = from post in db.Posts 
-                        orderby post.Time descending
-                        select post;
+            var posts = db.Posts
+                .Include(p => p.User) // nume autor
+                .Include(p => p.Comments) // nr comentarii
+                .Include(p => p.Reactions) // numar like-uri
+                .Where(p => p.User.IsPrivate == false &&
+                            !p.Reactions.Any(r => r.UserId == userManager.GetUserId(User)) && 
+                            p.UserId != userManager.GetUserId(User)) // doar postarile userilor publici la care NU s-a dat like inca
+                .OrderByDescending(p => p.Time) // cele mai noi postari prima data
+                .ToList();
             
             ViewBag.Posts = posts;
             
             return View();
+        }
+
+        [Authorize] // login required 
+        [HttpGet("Feed")]
+        public IActionResult Feed()
+        {
+            var currentUserID = userManager.GetUserId(User);
+            
+            // lista de id-uri ale userilor caruia currentUser ii da follow
+            var following = db.Follows
+                .Where(f => f.FollowerId == currentUserID && f.Status == FollowStatus.Accepted)
+                .Select(f => f.FolloweeId)
+                .ToList();
+            
+            // postarile userilor din lista 'following'
+            var posts = db.Posts
+                .Include(p => p.User)      //  pentru username, poza profil)
+                .Include(p => p.Comments)  // nr comentariilor
+                .Include(p => p.Reactions) // includem reactiile
+                .Where(p => following.Contains(p.UserId) && 
+                            !p.Reactions.Any(r => r.UserId == userManager.GetUserId(User)
+                            )) // la fel ca la explore -> totusi fiindca following nu primeste niciodata postarile user-ului curent nu tb sa le scoatem printr-o conditie where 
+                .OrderByDescending(p => p.Time) // crescator dupa timp
+                .ToList();
+
+            // se trimit datele in viewbag
+            ViewBag.Posts = posts;
+
+            // vreau sa refolosesc codul de la Explore (vuew-ul va avea un toggle intre explore si feed)
+            return View("Explore");
         }
 
         [HttpGet("Details/{id}")] // GET /Post/Details/5

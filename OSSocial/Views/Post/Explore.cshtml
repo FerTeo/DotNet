@@ -1,15 +1,41 @@
 @{
-    ViewData["Title"] = "Personal Feed";
+    // ia actiunea curenta in format string din ruta data 
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+    
+    if (currentAction == "Feed")
+    {
+        ViewData["Title"] = "Personal Feed";
+    }
+    else
+    {
+        ViewData["Title"] = "Explore Feed";
+    }
 }
 <h1 >@ViewData["Title"]</h1>
+
+<h1 class="text-center mb-4">@ViewData["Title"]</h1>
+
+<div class="d-flex justify-content-center mb-4">
+    <div class="btn-group" role="group">
+        <a asp-controller="Post" asp-action="Feed" 
+           class="btn @(currentAction == "Feed" ? "btn-dark" : "btn-outline-dark")">
+            Following
+        </a>
+        <a asp-controller="Post" asp-action="Explore" 
+           class="btn @(currentAction == "Explore" ? "btn-dark" : "btn-outline-dark")">
+            Explore
+        </a>
+    </div>
+</div>
 
 @foreach (var postare in ViewBag.Posts)
 {
     <div style="max-width: 50em; margin: auto;">
+        <h5 class="fw-bold">@postare.User.DisplayName</h5>
         <p >@postare.Title</p>
         <p>@postare.Content</p>
         <p>@postare.Time</p>
-        
+
         @if (!string.IsNullOrEmpty(postare.Media))
         {
             @* doar dacă nu e null, verificăm extensia *@
@@ -23,12 +49,12 @@
             else
             {
                 @* dacă nu e video, e imagine *@
-                <img src="@postare.Media" alt="Article Image" style="width: 100%; max-width: 30em; max-height: 30em height: auto; object-fit: cover; border-radius: 10px;" />
+                <img src="@postare.Media" alt="Article Image" style="width: 100%; max-width: 30em; max-height: 30em; height: auto; object-fit: cover; border-radius: 10px;"/>
             }
         }
         <br/>
-        
-        <a href="/Post/Details/@postare.Id" >Show post details</a>
+
+        <a href="/Post/Details/@postare.Id">Show post details</a>
         <br/>
         @if (ViewBag.EsteAdmin == true || ViewBag.UserId == postare.UserId)
         {
@@ -37,13 +63,13 @@
                 <button type="submit" class="btn btn-danger">Delete Post</button>
             </form>
         }
-        
+
         @if (ViewBag.UserId == postare.UserId)
         {
-            <a href="/Post/EditPost/@postare.Id" >Edit post</a>
-            <hr/>    
+            <a href="/Post/EditPost/@postare.Id">Edit post</a>
+            <hr/>
         }
-            
+
     </div>
 }
 
