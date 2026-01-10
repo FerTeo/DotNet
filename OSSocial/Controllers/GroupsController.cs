@@ -42,16 +42,10 @@ namespace OSSocial.Controllers
                     .Include(g => g.Members)
                     .Include(g => g.User)
                     .ToList();
-
-                if (!groups.Any())
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    ViewBag.Groups = groups;
-                    return View();
-                }
+                
+                ViewBag.Groups = groups;
+                return View();
+                
             }
             else if (User.IsInRole("Editor") || User.IsInRole("User"))
             {
