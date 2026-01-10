@@ -70,9 +70,12 @@ public class FollowController : Controller
         };
 
         // daca nu are contul privat atunci accepta automat cererea
-        if (targetUser.IsPrivate == false)
+        // necesar GetValueOrDefault pentru ca IsPrivate e nullable si ramane in null daca nu e setat
+        // GetValueOrDefault returneaza false daca e null
+        if (targetUser.IsPrivate.GetValueOrDefault() == false)
         {
             follow.Status = FollowStatus.Accepted;
+            follow.RequestedAt = DateTime.Now;
         }
 
         _db.Follows.Add(follow);
