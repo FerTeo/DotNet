@@ -6,6 +6,14 @@ using Microsoft.EntityFrameworkCore;
 using OSSocial.Models;
 using System.Security.Claims;
 
+// TO DO: 
+// - functionalitate de request to join private groups
+// - functionalitate de invite
+// - grupuri private vs publice
+// - functionalitate de management al membrilor (promovare la moderator, demitere, banare)
+// - functionalitate de editare grup 
+// - frontend la grupuri 
+
 namespace OSSocial.Controllers
 {
     [Route("Groups")]
@@ -42,16 +50,10 @@ namespace OSSocial.Controllers
                     .Include(g => g.Members)
                     .Include(g => g.User)
                     .ToList();
-
-                if (!groups.Any())
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    ViewBag.Groups = groups;
-                    return View();
-                }
+                
+                ViewBag.Groups = groups;
+                return View();
+                
             }
             else if (User.IsInRole("Editor") || User.IsInRole("User"))
             {
