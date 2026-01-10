@@ -31,7 +31,9 @@ namespace OSSocial.Controllers
                 .Include(p => p.User) // nume autor
                 .Include(p => p.Comments) // nr comentarii
                 .Include(p => p.Reactions) // numar like-uri
-                .Where(p => p.User.isPrivate == false) // doar postarile userilor publici
+                .Where(p => p.User.IsPrivate == false &&
+                            !p.Reactions.Any(r => r.UserId == userManager.GetUserId(User)) && 
+                            p.UserId != userManager.GetUserId(User)) // doar postarile userilor publici la care NU s-a dat like inca
                 .OrderByDescending(p => p.Time) // cele mai noi postari prima data
                 .ToList();
             
@@ -57,7 +59,9 @@ namespace OSSocial.Controllers
                 .Include(p => p.User)      //  pentru username, poza profil)
                 .Include(p => p.Comments)  // nr comentariilor
                 .Include(p => p.Reactions) // includem reactiile
-                .Where(p => following.Contains(p.UserId)) // VERIFICARE DACA POSTAREA E DE LA CINEVA URMARIT
+                .Where(p => following.Contains(p.UserId) && 
+                            !p.Reactions.Any(r => r.UserId == userManager.GetUserId(User)
+                            )) // la fel ca la explore -> totusi fiindca following nu primeste niciodata postarile user-ului curent nu tb sa le scoatem printr-o conditie where 
                 .OrderByDescending(p => p.Time) // crescator dupa timp
                 .ToList();
 
