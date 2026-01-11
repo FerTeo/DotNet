@@ -11,7 +11,7 @@ using ContentResult = OSSocial.Services.ContentResult;
 
 namespace OSSocial.Controllers
 {
-    //[Route("Post")]
+    [Route("Post")]
     public class PostController 
     (
         ApplicationDbContext context,
@@ -31,14 +31,17 @@ namespace OSSocial.Controllers
         {
             return RedirectToAction("Explore");
         }
-        
-        
-        
+
+
+
         /// <summary>
         ///  Afisarea postarilor publice
         /// </summary>
         /// <returns></returns>
+        [HttpGet("~/")]
+        [HttpGet("")]
         [HttpGet("Explore")]
+
         public IActionResult Explore()
         {
             // practic functie de index dar in social media terms
