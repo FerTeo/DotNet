@@ -8,13 +8,14 @@ using Microsoft.EntityFrameworkCore;
 namespace OSSocial.Controllers
 {
     [Route("Comments")]
-    public class CommentsController(
+    public class CommentsController
+    (
         ApplicationDbContext context,
         UserManager<ApplicationUser> userManager,
-        RoleManager<IdentityRole> roleManager) : Controller
-    
+        RoleManager<IdentityRole> roleManager
+    ) : Controller
     {
-        private readonly ApplicationDbContext db = context;
+        private readonly ApplicationDbContext _db = context;
         private readonly UserManager<ApplicationUser> _userManager = userManager;
         private readonly RoleManager<IdentityRole> _roleManager = roleManager;
 
@@ -32,9 +33,9 @@ namespace OSSocial.Controllers
             
             if (ModelState.IsValid) // verifica datele 
             {
-                db.Comments.Add(comentariu);
+                _db.Comments.Add(comentariu);
                 
-                db.SaveChanges();
+                _db.SaveChanges();
                 return Redirect("/Post/Details/" + comentariu.PostId); // afiseaza postarea dupa adaugarea comentariului
             }
             else
@@ -51,7 +52,7 @@ namespace OSSocial.Controllers
         [Authorize(Roles = "User,Editor,Admin")]
         public IActionResult Delete(int id)
         {
-            Comment? comentariu = db.Comments
+            Comment? comentariu = _db.Comments
                 .Include(c => c.Post)
                 .FirstOrDefault(c => c.Id == id);
 
@@ -72,8 +73,8 @@ namespace OSSocial.Controllers
                 || User.IsInRole("Admin")
                 || postOwnerId == currentUserId)
             {
-                db.Comments.Remove(comentariu);
-                db.SaveChanges();
+                _db.Comments.Remove(comentariu);
+                _db.SaveChanges();
                 
 
                 return RedirectToAction("Details", "Post", new { id = postId });
@@ -92,7 +93,7 @@ namespace OSSocial.Controllers
         [Authorize(Roles = "User,Editor,Admin")]
         public IActionResult Edit(int id)
         {
-            var comentariu = db.Comments
+            var comentariu = _db.Comments
                 .Include(c => c.Post)
                 .FirstOrDefault(c => c.Id == id);
 
@@ -115,7 +116,7 @@ namespace OSSocial.Controllers
         [Authorize(Roles = "User,Editor,Admin")]
         public IActionResult Edit(int id, Comment comentariu)
         {
-            Comment? comentariuDeModificat = db.Comments
+            Comment? comentariuDeModificat = _db.Comments
                 .Include(c => c.Post)
                 .FirstOrDefault(c => c.Id == id);
 
@@ -145,7 +146,7 @@ namespace OSSocial.Controllers
             }
 
             comentariuDeModificat.Content = comentariu.Content;
-            db.SaveChanges();
+            _db.SaveChanges();
 
             var redirect = Url.Action("Details", "Post", new { id = comentariuDeModificat.PostId }) + "#comment-" + comentariuDeModificat.Id;
             return Redirect(redirect);

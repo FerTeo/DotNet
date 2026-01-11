@@ -9,20 +9,18 @@ using System.Security.Claims;
 namespace OSSocial.Controllers
 {
     [Route("Groups")]
-    public class GroupsController : Controller
+    public class GroupsController
+    (
+        ApplicationDbContext context,
+        UserManager<ApplicationUser> userManager,
+        RoleManager<IdentityRole> roleManager
+    ) : Controller
     {
 
-        
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly ApplicationDbContext db;
+        private readonly ApplicationDbContext _db=context;        
+        private readonly UserManager<ApplicationUser> _userManager=userManager;
 
-        public GroupsController(
-            ApplicationDbContext context,
-            UserManager<ApplicationUser> userManager)
-        {
-            db = context;
-            _userManager = userManager;
-        }
+        
         
         // show ALL available groups
         // doar admin-ul poate vedea toate grupurile
@@ -36,7 +34,7 @@ namespace OSSocial.Controllers
 
             if (User.IsInRole("Admin"))
             {
-                var groups = db.Groups
+                var groups = _db.Groups
                     .Include(g => g.Members)
                     .Include(g => g.User)
                     .ToList();
@@ -48,7 +46,7 @@ namespace OSSocial.Controllers
             else if (User.IsInRole("Editor") || User.IsInRole("User"))
             {
 
-                var groups = db.Groups
+                var groups = _db.Groups
                     .Include(g => g.Members)
                     .Include(g => g.User)
                     .Where(g => g.UserId == currentUserId || g.Members.Any(m => m.UserId == currentUserId))
@@ -70,7 +68,7 @@ namespace OSSocial.Controllers
         {
             SetAccessRights();
 
-            var publicGroups = db.Groups
+            var publicGroups = _db.Groups
                 .Include(g => g.Members)
                 .Include(g => g.User)
                 .Where(g => g.IsPublic)
@@ -88,7 +86,7 @@ namespace OSSocial.Controllers
             SetAccessRights();
 
             // preiau grupul impreuna cu postarile si userii care au postat
-            var group = db.Groups
+            var group = _db.Groups
                 .Include(g => g.GroupPosts)
                 .ThenInclude(p => p.User) // member who posted
                 .Include(g => g.User) // include owner
@@ -107,7 +105,7 @@ namespace OSSocial.Controllers
             bool isOwner = group.UserId == currentUserId;
             bool isModerator = db.GroupMembers.Any(gm => gm.GroupId == group.Id && gm.UserId == currentUserId && gm.IsModerator);
             //Doar membrii acceptati nu cei pending
-            bool isMember = db.GroupMembers.Any(gm => 
+            bool isMember = _db.GroupMembers.Any(gm => 
                 gm.GroupId == group.Id && 
                 gm.UserId == currentUserId && 
                 gm.Status == RequestStatus.Accepted);
@@ -130,7 +128,7 @@ namespace OSSocial.Controllers
             ViewBag.IsModerator = isModerator;
             
             // pt a afisa toti membrii grupului (only ACCEPTED)
-            var member = db.GroupMembers 
+            var member = _db.GroupMembers 
                 .Include(gm => gm.User)
                 .Where(gm => gm.GroupId == group.Id && gm.UserId != _userManager.GetUserId(User))
                 .ToList();
@@ -159,15 +157,15 @@ namespace OSSocial.Controllers
 
             if (ModelState.IsValid)
             {
-                db.Groups.Add(group);
-                db.SaveChanges();
+                _db.Groups.Add(group);
+                _db.SaveChanges();
                 
                 // also need to add owner member entry
                 GroupMember groupMember = new GroupMember(_userManager.GetUserId(User), group.Id,RequestStatus.Accepted);
                 groupMember.IsModerator = true;
                 
-                db.GroupMembers.Add(groupMember);
-                db.SaveChanges();
+                _db.GroupMembers.Add(groupMember);
+                _db.SaveChanges();
                 
                 TempData["message"] = "Group created successfully :P";
                 TempData["messageType"] = "alert-success";
@@ -186,7 +184,7 @@ namespace OSSocial.Controllers
         [Authorize(Roles =  "Admin, User, Editor")]
         public async Task<IActionResult> JoinGroup(int GroupId)
         {
-            var group = db.Groups.Find(GroupId);
+            var group = _db.Groups.Find(GroupId);
             if (group == null)
             {
                 TempData["message"] = "Group not found";
@@ -204,7 +202,7 @@ namespace OSSocial.Controllers
             }
 
             // check if already a member
-            bool isAlreadyMember = db.GroupMembers.Any(gm => gm.GroupId == GroupId && gm.UserId == currentUser.Id);
+            bool isAlreadyMember = _db.GroupMembers.Any(gm => gm.GroupId == GroupId && gm.UserId == currentUser.Id);
             if (isAlreadyMember)
             {
                 TempData["message"] = "You are already a member of this group.";
@@ -216,8 +214,8 @@ namespace OSSocial.Controllers
             {
                 //dam join direct nu mai avem nevoie de confirmare de la admin
                 GroupMember newMember = new GroupMember(currentUser.Id.ToString(), group.Id,RequestStatus.Accepted);
-                db.GroupMembers.Add(newMember);
-                db.SaveChanges();
+                _db.GroupMembers.Add(newMember);
+                _db.SaveChanges();
                
 
                 TempData["message"] = "You have joined the group!";
@@ -227,7 +225,7 @@ namespace OSSocial.Controllers
             else
             {
                 GroupMember newMember = new GroupMember(currentUser.Id.ToString(), group.Id,RequestStatus.Pending);
-                db.GroupMembers.Add(newMember);
+                _db.GroupMembers.Add(newMember);
 
                 //grupul este privat deci trimitem notificare
                 var notification = new Notification
@@ -240,8 +238,8 @@ namespace OSSocial.Controllers
                     Date = DateTime.Now
                 };
 
-                db.Notifications.Add(notification);
-                db.SaveChanges();
+                _db.Notifications.Add(notification);
+                _db.SaveChanges();
 
                 TempData["message"] = "Join request sent! Waiting for owner approval...";
                 TempData["messageType"] = "alert-info";
@@ -254,7 +252,7 @@ namespace OSSocial.Controllers
         [Authorize(Roles = "Admin, User, Editor")]
         public IActionResult LeaveGroup(int GroupId)
         {
-            var group = db.Groups.Find(GroupId);
+            var group = _db.Groups.Find(GroupId);
 
             if (group == null)
             {
@@ -269,7 +267,7 @@ namespace OSSocial.Controllers
             var isOwner = group.UserId == currentUserId;
             
             // un membru ar trebui sa poata iesi din grup normal
-            var membership = db.GroupMembers.FirstOrDefault(gm => gm.GroupId == GroupId && gm.UserId == currentUserId);
+            var membership = _db.GroupMembers.FirstOrDefault(gm => gm.GroupId == GroupId && gm.UserId == currentUserId);
 
             if (membership == null)
             {
@@ -284,29 +282,29 @@ namespace OSSocial.Controllers
                 // (ma intrebam de ce imi da eroare ...)
                 
                 // sterge postarile asociate grupului
-                var groupPosts = db.Posts.Where(p => p.GroupId == GroupId).ToList();
+                var groupPosts = _db.Posts.Where(p => p.GroupId == GroupId).ToList();
                 if (groupPosts.Any())
                 {
-                    db.Posts.RemoveRange(groupPosts);
+                    _db.Posts.RemoveRange(groupPosts);
                 }
 
                 // sterge membrii grupului (intrarile din tabela asociativa GroupMembers)
-                var groupMembers = db.GroupMembers.Where(gm => gm.GroupId == GroupId).ToList();
+                var groupMembers = _db.GroupMembers.Where(gm => gm.GroupId == GroupId).ToList();
                 if (groupMembers.Any())
                 {
-                    db.GroupMembers.RemoveRange(groupMembers);
+                    _db.GroupMembers.RemoveRange(groupMembers);
                 }
                 
-                db.Groups.Remove(group);
-                db.SaveChanges();   
+                _db.Groups.Remove(group);
+                _db.SaveChanges();   
                 
                 TempData["message"] = "Group deleted :(";
                 return RedirectToAction("Explore");
             }
             else // doar membru simplu
             {
-                db.GroupMembers.Remove(membership);
-                db.SaveChanges();
+                _db.GroupMembers.Remove(membership);
+                _db.SaveChanges();
                 
                 TempData["message"] = "Officially left the group...";
             }

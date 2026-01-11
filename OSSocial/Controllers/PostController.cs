@@ -12,36 +12,37 @@ using ContentResult = OSSocial.Services.ContentResult;
 namespace OSSocial.Controllers
 {
     [Route("Post")]
-    public class PostController : Controller
+    public class PostController 
+    (
+        ApplicationDbContext context,
+        UserManager<ApplicationUser> userManager,
+        RoleManager<IdentityRole> roleManager,
+        IContentAnalysisService contentService
+    ) : Controller
     {
-        private readonly ApplicationDbContext db;
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly RoleManager<IdentityRole> _roleManager;
-        private readonly IContentAnalysisService _contentService;
+        private readonly ApplicationDbContext _db=context;
+        private readonly UserManager<ApplicationUser> _userManager=userManager;
+        private readonly RoleManager<IdentityRole> _roleManager=roleManager;
+        private readonly IContentAnalysisService _contentService=contentService;
 
-        public PostController(
-            ApplicationDbContext context,
-            UserManager<ApplicationUser> userManager, 
-            RoleManager<IdentityRole> roleManager, 
-            IContentAnalysisService contentService)
-        {
-            db = context;
-            _userManager = userManager;
-            _roleManager = roleManager;
-            _contentService = contentService;
-        }
 
         [HttpGet("")]
         public IActionResult Index()
         {
             return RedirectToAction("Explore");
         }
-
-        [HttpGet("Explore")] // GET /Post/Explore
+        
+        
+        
+        /// <summary>
+        ///  Afisarea postarilor publice
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("Explore")]
         public IActionResult Explore()
         {
             // practic functie de index dar in social media terms
-            var posts = db.Posts
+            var posts = _db.Posts
                 .Include(p => p.User) // nume autor
                 .Include(p => p.Comments) // nr comentarii
                 .Include(p => p.Reactions) // numar like-uri
@@ -55,21 +56,27 @@ namespace OSSocial.Controllers
             
             return View();
         }
-
+        
+        
+        
+        /// <summary>
+        ///  Afisarea feed ului personalizat
+        /// </summary>
+        /// <returns></returns>
         [Authorize] // login required
         [HttpGet("Feed")]
         public IActionResult Feed()
         {
-            var currentUserID = _userManager.GetUserId(User);
+            var currentUserId = _userManager.GetUserId(User);
             
             // lista de id-uri ale userilor caruia currentUser ii da follow
-            var following = db.Follows
-                .Where(f => f.FollowerId == currentUserID && f.Status == FollowStatus.Accepted)
+            var following = _db.Follows
+                .Where(f => f.FollowerId == currentUserId && f.Status == FollowStatus.Accepted)
                 .Select(f => f.FolloweeId)
                 .ToList();
             
             // postarile userilor din lista 'following'
-            var posts = db.Posts
+            var posts = _db.Posts
                 .Include(p => p.User)      //  pentru username, poza profil)
                 .Include(p => p.Comments)  // nr comentariilor
                 .Include(p => p.Reactions) // includem reactiile
@@ -85,17 +92,28 @@ namespace OSSocial.Controllers
             // vreau sa refolosesc codul de la Explore (vuew-ul va avea un toggle intre explore si feed)
             return View("Explore");
         }
-
+        
+        
+        /// <summary>
+        ///  Afisarea unei postari
+        /// </summary>
+        /// <param name="id">
+        ///  Id-ul postarii care este afisata
+        /// </param>
+        /// <param name="edit">
+        ///  Daca se editeaza un comentariu, se va afisa formularul de edit
+        /// </param>
+        /// <returns></returns>
         [HttpGet("Details/{id}")] // GET /Post/Details/5
         public IActionResult Details(int id, int? edit)
         {
-            Post? postare = db.Posts
+            Post? post = _db.Posts
                 .Include(p => p.User)                    // Include Post Author
                 .Include(p => p.Comments)                // Include Comments
                 .ThenInclude(c => c.User)                // Include Comment Authors
                 .FirstOrDefault(p => p.Id == id);
             
-            if (postare == null)
+            if (post == null)
             {
                 return NotFound();
             }
@@ -116,9 +134,15 @@ namespace OSSocial.Controllers
             // daca se editeaza un comentariu, paseaza edit id-ul
             ViewBag.EditCommentId = edit;
              
-             return View(postare);
+             return View(post);
          }
          
+        /// <summary>
+        ///  Helper pentru integrarea AI-ului
+        /// </summary>
+        /// <param name="postare"></param>
+        /// <param name="analysisResult"></param>
+        /// <returns></returns>
          private bool HelperCheckAcceptedPost(ref Post postare, ContentResult analysisResult)
          {
              // Cazul ideal: API-ul a răspuns cu succes
@@ -142,46 +166,58 @@ namespace OSSocial.Controllers
              ModelState.AddModelError(string.Empty, $"Eroare filtru AI: {analysisResult.ErrorMessage}");
              return false; // <--- MODIFICARE: Blochează postarea dacă AI-ul nu merge
          }
-
-         [Authorize] // necesar ca user-ul sa fie logat, altfel nu poate crea o postare
-         [HttpGet("CreatePost")] // GET /Post/CreatePost - returneaza formularul
-         public IActionResult CreatePost() // ar tb sa returneze un formular
-         {
-             return View();
-         }
-
+        
+        /// <summary>
+        ///  Afisarea paginii dedicate crearii postarilor
+        /// </summary>
+        /// <returns></returns>
+        [Authorize] // necesar ca user-ul sa fie logat, altfel nu poate crea o postare
+        [HttpGet("CreatePost")] // GET /Post/CreatePost - returneaza formularul
+        public IActionResult CreatePost() // ar tb sa returneze un formular
+        {
+            return View();
+        }
+        
+        /// <summary>
+        ///  Crearea unei postari + integrare AI
+        /// </summary>
+        /// <param name="post">
+        /// Obiect de tip postare primit din formularul din view-ul CreatePost
+        /// </param>
+        /// <param name="image"></param>
+        /// <returns></returns>
         [HttpPost("CreatePost")]
         [Authorize] // te trimite direct la login daca nu esti logat!!
-        public async Task<IActionResult> CreatePost(Post postare, IFormFile image) // removed Group? group parameter
+        public async Task<IActionResult> CreatePost(Post post, IFormFile image) 
         { 
             // time and userId set automatically 
-            postare.Time = DateTime.Now;
+            post.Time = DateTime.Now;
             
             var currentUserId = _userManager.GetUserId(User);
             if (currentUserId == null)
             {
                 return BadRequest();
             }
-            postare.UserId = currentUserId;
+            post.UserId = currentUserId;
 
             // validare/ clear validation errors
-            ModelState.Remove(nameof(postare.UserId));
-            ModelState.Remove(nameof(postare.Time));
-            ModelState.Remove(nameof(postare.Group));
+            ModelState.Remove(nameof(post.UserId));
+            ModelState.Remove(nameof(post.Time));
+            ModelState.Remove(nameof(post.Group));
             
             // pt a posta ceva tb atat titlul cat si continutul sa fie adecvate
             // pe viitor ar tb implementat si analiza video dar...
             
             // pt ca am primit eroarea "TooManyRequests" .. faceam separat verificarea pentru titlu si content.... 
             // unesc titlu si continutul ca sa nu mai primesc aceasta eroare....
-            string textToAnalyze = $"Title: {postare.Title}\nContent: {postare.Content}";
+            string textToAnalyze = $"Title: {post.Title}\nContent: {post.Content}";
             
             // apel catre API facut doar pe text empty
             if (!string.IsNullOrWhiteSpace(textToAnalyze))
             {
                 var analysisResult = await _contentService.AnalyzeContentAsync(textToAnalyze);
 
-                if (!HelperCheckAcceptedPost(ref postare, analysisResult))
+                if (!HelperCheckAcceptedPost(ref post, analysisResult))
                 {
                     string errorMessage;
                     
@@ -203,7 +239,7 @@ namespace OSSocial.Controllers
                     ViewBag.ApiIsAccepted = $"{analysisResult.IsAccepted}";
                     ViewBag.ApiErrorMessage = $"{analysisResult.ErrorMessage}";
 
-                    return View(postare);
+                    return View(post);
                 }
             }
             
@@ -220,13 +256,13 @@ namespace OSSocial.Controllers
                 if (!allowedExtension.Contains(fileExtrension))
                 {
                     ModelState.AddModelError("Image", $"Image {fileExtrension} does not have the correct format. Media to be of an image (jpg, jpeg, png, gif) or a video (mp4,  mov)");
-                    return View(postare);
+                    return View(post);
                 }
                 
                 // stocare cale
                 var webRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
         
-                // Ensure folder exists
+                // verificam ca folderul sa existe
                 if (!Directory.Exists(webRootPath))
                 {
                     Directory.CreateDirectory(webRootPath);
@@ -234,29 +270,29 @@ namespace OSSocial.Controllers
                 
                 var uniqueFileName = Guid.NewGuid().ToString() + "_" + image.FileName;
                 
-                var filePath = Path.Combine(webRootPath, uniqueFileName); // local save path
-                var dbPath = "/images/" + uniqueFileName; // db save path
+                var filePath = Path.Combine(webRootPath, uniqueFileName); //cale locala
+                var dbPath = "/images/" + uniqueFileName; // cale baza de date
                 
                 // salvare fisier
-                using (var fileStream = new FileStream(filePath, System.IO.FileMode.Create))
+                await using (var fileStream = new FileStream(filePath, System.IO.FileMode.Create))
                 {
-                    // await only used on async methods!
+                    // await doar pentru metode async
                     await image.CopyToAsync(fileStream);
                 }
                 
-                ModelState.Remove(nameof(postare.Media));
+                ModelState.Remove(nameof(post.Media));
                 
-                postare.Media = dbPath;
+                post.Media = dbPath;
             }
             
-            db.Posts.Add(postare);
-            db.SaveChanges();
+            _db.Posts.Add(post);
+            _db.SaveChanges();
             
             // verifici daca postarea apartine unui grup
-            if (postare.GroupId != null && postare.GroupId != 0)
+            if (post.GroupId != null && post.GroupId != 0)
             {
-                var groupId = postare.GroupId.Value;
-                var group = db.Groups.Find(groupId);
+                var groupId = post.GroupId.Value;
+                var group = _db.Groups.Find(groupId);
                 if (group != null)
                 {
                     // allow posting user to be redirected to the group page if they have access
@@ -265,7 +301,7 @@ namespace OSSocial.Controllers
 
                     bool isAdmin = User?.IsInRole("Admin") == true;
                     bool isOwner = group.UserId == creatorUserId;
-                    bool isMember = db.GroupMembers.Any(gm => gm.GroupId == groupId && gm.UserId == creatorUserId);
+                    bool isMember = _db.GroupMembers.Any(gm => gm.GroupId == groupId && gm.UserId == creatorUserId);
 
                     if (isAdmin || isOwner || isMember)
                     {
@@ -277,12 +313,21 @@ namespace OSSocial.Controllers
 
             return RedirectToAction("Feed"); // dupa ce creezi o postare te intorci pe feed
         }
-
+        
+        
+        
+        /// <summary>
+        ///  Afisarea editarii unei postari
+        /// </summary>
+        /// <param name="id">
+        /// Id ul postarii pe care vrem sa o modificam
+        /// </param>
+        /// <returns></returns>
         [Authorize]
         [HttpGet("EditPost/{id}")] // GET /Post/EditPost/5
         public IActionResult EditPost(int id)
         {
-            Post? postare = db.Posts.Find(id);
+            Post? postare = _db.Posts.Find(id);
             if (postare == null)
             {
                 return NotFound();
@@ -298,24 +343,36 @@ namespace OSSocial.Controllers
             ViewBag.Post = postare;
             return View(postare);
         }
-
         
+        
+        
+        
+        /// <summary>
+        ///  Editarea unui postari
+        /// </summary>
+        /// <param name="id">
+        /// Id-ul postarii pe care vrem sa il editam
+        /// </param>
+        /// <param name="formPost">
+        /// Postarea primitia din formular
+        /// </param>
+        /// <returns></returns>
         [HttpPost("EditPost/{id}")]
         [Authorize]
-        public IActionResult EditPost(int id, Post postareFormular)
+        public IActionResult EditPost(int id, Post formPost)
         {
-            Post? postareModif = db.Posts.Find(id);
-            if (postareModif == null)
+            Post? modifiedPost = _db.Posts.Find(id);
+            if (modifiedPost == null)
             {
                 return NotFound();
             }
             
             try
             {
-                postareModif.Title = postareFormular.Title;
-                postareModif.Content = postareFormular.Content;
+                modifiedPost.Title = formPost.Title;
+                modifiedPost.Content = formPost.Content;
 
-                db.SaveChanges();
+                _db.SaveChanges();
                 
                 // postareModif.Time; pt ca pastrez doar ora postarii nu modific timpul, in viitor va tb adaugata chestia asta (adic edit time; sa apara ca postarea a fost editata)
                 
@@ -327,10 +384,19 @@ namespace OSSocial.Controllers
             }
         }
 
+        
+        
+        /// <summary>
+        ///  Stergerea unei postari
+        /// </summary>
+        /// <param name="id">
+        /// Id-ul postarii pe care o stergem
+        /// </param>
+        /// <returns></returns>
         [HttpPost("Delete/{id}")]
         public IActionResult Delete(int id)
         {
-            Post? postare = db.Posts.Find(id);
+            Post? postare = _db.Posts.Find(id);
             if (postare == null)
             {
                 return NotFound();
@@ -343,8 +409,8 @@ namespace OSSocial.Controllers
                 return Forbid();
             }
             
-            db.Posts.Remove(postare);
-            db.SaveChanges();
+            _db.Posts.Remove(postare);
+            _db.SaveChanges();
             
             return RedirectToAction("Feed");
         }

@@ -8,37 +8,32 @@ using Microsoft.EntityFrameworkCore;
 namespace OSSocial.Controllers;
 
 [Route("Profiles")]
-public class ProfilesController : Controller
+public class ProfilesController
+(
+    ApplicationDbContext context,
+    UserManager<ApplicationUser> userManager,
+    RoleManager<IdentityRole> roleManager
+) : Controller
 {
-    private readonly ApplicationDbContext db;
+    private readonly ApplicationDbContext _db=context;
+    private readonly UserManager<ApplicationUser> _userManager=userManager;
+    private readonly RoleManager<IdentityRole> _roleManager=roleManager;
 
-    private readonly UserManager<ApplicationUser> _userManager;
 
-    private readonly RoleManager<IdentityRole> _roleManager;
-
-    public ProfilesController(
-        ApplicationDbContext context,
-        UserManager<ApplicationUser> userManager,
-        RoleManager<IdentityRole> roleManager
-    )
-    {
-        db = context;
-
-        _userManager = userManager;
-
-        _roleManager = roleManager;
-    }
     
-    // /Profiles/Index
+    /// <summary>
+    ///  Afisarea tuturor utilizatorlor +  cu functionalitatea de search
+    /// </summary>
+    /// <returns></returns>
     [HttpGet]
-    //afisarea utilizatorilor
+
     public IActionResult Index()
     {
         // se ia termenul de cautare din url
         var search = Convert.ToString(HttpContext.Request.Query["search"])?.Trim();
 
         // se construieste interogarea de baza
-        var usersQuery = db.ApplicationUsers.AsQueryable();
+        var usersQuery = _db.ApplicationUsers.AsQueryable();
 
         // filtrez dupa numele de utilizator daca s-a dat un termen de cautare
         if (!string.IsNullOrEmpty(search))
@@ -58,12 +53,18 @@ public class ProfilesController : Controller
     }
     
     
-    // /Profiles/Show/admin
-    //profilul unui utilizator
-    [HttpGet("Show/{username}")]
-    public async Task<ActionResult> ShowAsync(string username)
+
+    /// <summary>
+    ///  Afisarea profilul unui utilizator
+    /// </summary>
+    /// <param name="username">
+    ///  Primeste ca parametru username-ul utilizatorilui (unuic in DB)
+    /// </param>
+    /// <returns></returns>
+    [HttpGet]
+    public async Task<ActionResult> Show(string username)
     {
-        ApplicationUser? targetUser = await db.ApplicationUsers
+        ApplicationUser? targetUser = await _db.ApplicationUsers
             .Include(u => u.Posts) 
             .FirstOrDefaultAsync(u => u.NormalizedUserName == username.ToUpper());
 
@@ -77,8 +78,12 @@ public class ProfilesController : Controller
         var currentUser = await _userManager.GetUserAsync(User);
 
         // numarul de urmaritori si urmarii
-        var followersCount = await db.Follows.CountAsync(f => f.FolloweeId == targetUser.Id && f.Status == FollowStatus.Accepted);
-        var followingCount = await db.Follows.CountAsync(f => f.FollowerId == targetUser.Id && f.Status == FollowStatus.Accepted);
+        var followersCount = await _db.Follows
+            .CountAsync(f => f.FolloweeId == targetUser.Id && 
+                             f.Status == FollowStatus.Accepted);
+        var followingCount = await _db.Follows
+            .CountAsync(f => f.FollowerId == targetUser.Id && 
+                             f.Status == FollowStatus.Accepted);
 
         // determinam realtia dintre utilizatorul curent si profilul
         bool isFollowing = false;
@@ -89,7 +94,7 @@ public class ProfilesController : Controller
         if (currentUser != null && currentUser.Id != targetUser.Id)
         {
             showFollowButton = true;
-            var relationship = await db.Follows
+            var relationship = await _db.Follows
                 .FirstOrDefaultAsync(f => f.FollowerId == currentUser.Id 
                                           && f.FolloweeId == targetUser.Id);
             if (relationship != null)
@@ -108,11 +113,10 @@ public class ProfilesController : Controller
         
         
         //verificam daca se pot vedea postarile
-        bool ShowPosts = false;
-
+        bool showPosts = false;
         if (isFollowing == true || targetUser.IsPrivate == false || targetUser==currentUser)
         {
-            ShowPosts = true;
+            showPosts = true;
         }
         
         
@@ -127,7 +131,7 @@ public class ProfilesController : Controller
         ViewBag.IsFollowing = isFollowing;
         ViewBag.IsPending = isPending;
         ViewBag.ShowFollowButton = showFollowButton;
-        ViewBag.ShowPosts = ShowPosts;
+        ViewBag.ShowPosts = showPosts;
 
         return View(targetUser);
     }
