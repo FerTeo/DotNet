@@ -103,7 +103,7 @@ namespace OSSocial.Controllers
             var currentUserId = User?.FindFirstValue(ClaimTypes.NameIdentifier);
             bool isAdmin = User?.IsInRole("Admin") == true;
             bool isOwner = group.UserId == currentUserId;
-            bool isModerator = db.GroupMembers.Any(gm => gm.GroupId == group.Id && gm.UserId == currentUserId && gm.IsModerator);
+            bool isModerator = _db.GroupMembers.Any(gm => gm.GroupId == group.Id && gm.UserId == currentUserId && gm.IsModerator);
             //Doar membrii acceptati nu cei pending
             bool isMember = _db.GroupMembers.Any(gm => 
                 gm.GroupId == group.Id && 
@@ -326,7 +326,7 @@ namespace OSSocial.Controllers
         [Authorize(Roles =  "Admin, User, Editor")]
         public IActionResult MakeAdmin(int groupMemberId)
         {
-            var membership = db.GroupMembers
+            var membership = _db.GroupMembers
                 .Include(gm => gm.Group)
                 .FirstOrDefault(gm => gm.Id == groupMemberId);
             
@@ -359,7 +359,7 @@ namespace OSSocial.Controllers
             }
 
             membership.IsModerator = true;
-            db.SaveChanges();
+            _db.SaveChanges();
     
             TempData["message"] = "Member promoted to admin successfully.";
             TempData["messageType"] = "alert-success";
@@ -372,7 +372,7 @@ namespace OSSocial.Controllers
         [Authorize(Roles = "Admin, User, Editor")]
         public IActionResult RemoveMember(int groupMemberId)
         {
-            var membership = db.GroupMembers
+            var membership = _db.GroupMembers
                 .Include(gm => gm.Group)
                 .FirstOrDefault(gm => gm.Id == groupMemberId);
             
@@ -395,7 +395,7 @@ namespace OSSocial.Controllers
             bool isAdmin = User.IsInRole("Admin");
             bool isGroupOwner = membership.Group.UserId == currentUserId;
             
-            bool isCurrentUserModerator = db.GroupMembers.Any(gm => 
+            bool isCurrentUserModerator = _db.GroupMembers.Any(gm => 
                 gm.GroupId == groupId && 
                 gm.UserId == currentUserId && 
                 gm.IsModerator == true);
@@ -416,8 +416,8 @@ namespace OSSocial.Controllers
                 return RedirectToAction("GroupProfile", new { id = groupId });
             }
             
-            db.GroupMembers.Remove(membership);
-            db.SaveChanges();
+            _db.GroupMembers.Remove(membership);
+            _db.SaveChanges();
     
             TempData["message"] = "Member removed successfully.";
             TempData["messageType"] = "alert-success";

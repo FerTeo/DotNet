@@ -25,7 +25,7 @@ public class ProfilesController
     ///  Afisarea tuturor utilizatorlor +  cu functionalitatea de search
     /// </summary>
     /// <returns></returns>
-    [HttpGet]
+    [HttpGet("")]
 
     public IActionResult Index()
     {
@@ -61,7 +61,7 @@ public class ProfilesController
     ///  Primeste ca parametru username-ul utilizatorilui (unuic in DB)
     /// </param>
     /// <returns></returns>
-    [HttpGet]
+    [HttpGet("{username}")]
     public async Task<ActionResult> Show(string username)
     {
         ApplicationUser? targetUser = await _db.ApplicationUsers
