@@ -17,9 +17,9 @@ public class ProfilesController
 {
     private readonly ApplicationDbContext _db=context;
     private readonly UserManager<ApplicationUser> _userManager=userManager;
-    private readonly RoleManager<IdentityRole> _roleManager=roleManager;
+    private readonly RoleManager<IdentityRole> _role_manager=roleManager;
 
-
+    
     
     /// <summary>
     ///  Afisarea tuturor utilizatorlor +  cu functionalitatea de search
@@ -33,12 +33,15 @@ public class ProfilesController
         var search = Convert.ToString(HttpContext.Request.Query["search"])?.Trim();
 
         // se construieste interogarea de baza
-        var usersQuery = _db.ApplicationUsers.AsQueryable();
+        // include Posts so we can show a posts count in the index preview
+        var usersQuery = _db.ApplicationUsers
+            .Include(u => u.Posts)
+            .AsQueryable();
 
         // filtrez dupa numele de utilizator daca s-a dat un termen de cautare
         if (!string.IsNullOrEmpty(search))
         {
-            usersQuery = usersQuery.Where(u => u.UserName.Contains(search));
+            usersQuery = usersQuery.Where(u => u.UserName.Contains(search) || (u.DisplayName != null && u.DisplayName.Contains(search)));
         }
 
         usersQuery = usersQuery.OrderBy(u => u.UserName);
@@ -75,7 +78,7 @@ public class ProfilesController
         }
 
         // utilizatorul curent (poate fi null daca nu e intregistart!)
-        var currentUser = await _userManager.GetUserAsync(User);
+        var currentUser = await _user_manager_getuser_async();
 
         // numarul de urmaritori si urmarii
         var followersCount = await _db.Follows
@@ -134,5 +137,18 @@ public class ProfilesController
         ViewBag.ShowPosts = showPosts;
 
         return View(targetUser);
+    }
+
+    // small helper for user retrieval
+    private Task<ApplicationUser?> _user_manager_getuser_async()
+    {
+        try
+        {
+            return _userManager.GetUserAsync(User);
+        }
+        catch
+        {
+            return Task.FromResult<ApplicationUser?>(null);
+        }
     }
 }
