@@ -4,6 +4,8 @@ using OSSocial.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using OSSocial.Services;
+using ContentResult = OSSocial.Services.ContentResult;
 
 namespace OSSocial.Controllers
 {
@@ -12,17 +14,19 @@ namespace OSSocial.Controllers
     (
         ApplicationDbContext context,
         UserManager<ApplicationUser> userManager,
-        RoleManager<IdentityRole> roleManager
-    ) : Controller
+        RoleManager<IdentityRole> roleManager,
+        IContentAnalysisService contentService) : Controller
+
     {
         private readonly ApplicationDbContext _db = context;
         private readonly UserManager<ApplicationUser> _userManager = userManager;
         private readonly RoleManager<IdentityRole> _roleManager = roleManager;
+        private readonly IContentAnalysisService _contentService = contentService;
 
         // Add comment (asociat unei postari si unui utilizator)
         [HttpPost("New")]
         [Authorize] // orice utilizator logat poate adauga comentarii
-        public IActionResult New(Comment comentariu)
+        public async Task<IActionResult> New(Comment comentariu)
         {
             comentariu.DateCreated = DateTime.Now;
             comentariu.UserId = _userManager.GetUserId(User);
@@ -31,26 +35,48 @@ namespace OSSocial.Controllers
             ModelState.Remove(nameof(comentariu.User));
             ModelState.Remove(nameof(comentariu.UserId));
             
-            if (ModelState.IsValid) // verifica datele 
+            // validare model
+            if (!ModelState.IsValid)
             {
-                _db.Comments.Add(comentariu);
-                
-                _db.SaveChanges();
-                return Redirect("/Post/Details/" + comentariu.PostId); // afiseaza postarea dupa adaugarea comentariului
-            }
-            else
-            {
-                // daca comentariul nu este valid (ex:empty content)
-                // am incercat si cu TempData dar ma duceam spre cookie-uri si am zis sa nu ma mai complic atp
                 return Redirect("/Post/Details/" + comentariu.PostId + "?err=empty");
             }
+            
+            if (!string.IsNullOrWhiteSpace(comentariu.Content))
+            {
+                var analysisResult = await _contentService.AnalyzeContentAsync(comentariu.Content);
+
+                // if API call failed
+                if (!analysisResult.Success)
+                {
+                    TempData["message"] = $"{analysisResult.ErrorMessage}. Please wait a moment and try again.";
+                    TempData["messageType"] = "alert-danger";
+                    return Redirect("/Post/Details/" + comentariu.PostId);
+                }
+
+                // if content is explicitly rejected by the AI
+                if (!analysisResult.IsAccepted)
+                {
+                    TempData["message"] = $"Sorry, but you comment has been rejected :( \n: {analysisResult.Reason}";
+                    TempData["messageType"] = "alert-danger";
+
+                    // provide admin debug info
+                    TempData["ApiIsAccepted"] = analysisResult.IsAccepted.ToString();
+                    TempData["ApiErrorMessage"] = analysisResult.ErrorMessage ?? string.Empty;
+
+                    return Redirect("/Post/Details/" + comentariu.PostId);
+                }
+            }
+
+            _db.Comments.Add(comentariu);
+            _db.SaveChanges();
+            return Redirect("/Post/Details/" + comentariu.PostId); // afiseaza postarea dupa adaugarea comentariului
         }
 
         // Delete comment
         [HttpPost("Delete/{id}")]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "User,Editor,Admin")]
-        public IActionResult Delete(int id)
+        public IActionResult Delete(int id, string? returnUrl)
         {
             Comment? comentariu = _db.Comments
                 .Include(c => c.Post)
@@ -75,7 +101,12 @@ namespace OSSocial.Controllers
             {
                 _db.Comments.Remove(comentariu);
                 _db.SaveChanges();
-                
+
+                // Prefer returning to a provided local returnUrl (the view includes one), otherwise go to Post/Details
+                if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                {
+                    return Redirect(returnUrl);
+                }
 
                 return RedirectToAction("Details", "Post", new { id = postId });
             }

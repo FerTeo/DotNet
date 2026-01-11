@@ -60,6 +60,27 @@
                         <h6 class="mb-0">Comments : @((Model.Comments?.Count) ?? 0)</h6>
                     </div>
 
+                    @* Show AI rejection / API messages stored in TempData *@
+                    @{ 
+                        var aiMessage = TempData["message"] as string;
+                        var aiMsgType = TempData["messageType"] as string ?? "alert-info";
+                    }
+                    @if (!string.IsNullOrEmpty(aiMessage))
+                    {
+                        <div class="mt-2">
+                            <div class="alert @aiMsgType" role="alert">
+                                @aiMessage
+
+                                @if (ViewBag.EsteAdmin == true)
+                                {
+                                    <hr />
+                                    <div class="small text-muted">API Accepted: @(TempData["ApiIsAccepted"] ?? "n/a")</div>
+                                    <div class="small text-muted">API Error: @(TempData["ApiErrorMessage"] ?? "")</div>
+                                }
+                            </div>
+                        </div>
+                    }
+
                     <div class="comments-column flex-fill p-2">
                         @if (Model.Comments != null && Model.Comments.Any())
                         {
