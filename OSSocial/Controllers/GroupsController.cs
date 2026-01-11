@@ -75,7 +75,7 @@ namespace OSSocial.Controllers
                 .Include(g => g.User)
                 .Where(g => g.IsPublic)
                 .ToList();
-
+            
             ViewBag.PublicGroups = publicGroups;
 
             return View();
@@ -105,6 +105,7 @@ namespace OSSocial.Controllers
             var currentUserId = User?.FindFirstValue(ClaimTypes.NameIdentifier);
             bool isAdmin = User?.IsInRole("Admin") == true;
             bool isOwner = group.UserId == currentUserId;
+            bool isModerator = db.GroupMembers.Any(gm => gm.GroupId == group.Id && gm.UserId == currentUserId && gm.IsModerator);
             //Doar membrii acceptati nu cei pending
             bool isMember = db.GroupMembers.Any(gm => 
                 gm.GroupId == group.Id && 
@@ -125,7 +126,8 @@ namespace OSSocial.Controllers
             ViewBag.CanView = canView;
             ViewBag.IsMember = isMember;
             ViewBag.IsOwner = isOwner;
-            ViewBag.EsteAdmin = isAdmin;
+            ViewBag.IsAdmin = isAdmin;
+            ViewBag.IsModerator = isModerator;
             
             // pt a afisa toti membrii grupului (only ACCEPTED)
             var member = db.GroupMembers 
@@ -322,6 +324,110 @@ namespace OSSocial.Controllers
             
         }
         
+        [HttpPost("MakeAdmin")]
+        [Authorize(Roles =  "Admin, User, Editor")]
+        public IActionResult MakeAdmin(int groupMemberId)
+        {
+            var membership = db.GroupMembers
+                .Include(gm => gm.Group)
+                .FirstOrDefault(gm => gm.Id == groupMemberId);
+            
+            if (membership == null)
+            {
+                TempData["message"] = "Member not found in the group.";
+                TempData["messageType"] = "alert-danger";
+                return RedirectToAction("Index"); // nu se gaseste membrul -> nu se poate obtine id-ul
+            }
+            
+            int groupId = membership.GroupId.GetValueOrDefault(); // valoarea sau 0 daca e null
+
+            if (membership.Group == null)
+            {
+                TempData["message"] = "Group not found";
+                return RedirectToAction("Index");
+            }
+            
+            var currentUserId = _userManager.GetUserId(User);
+            bool isAdmin = User.IsInRole("Admin");
+            bool isModerator = User.IsInRole("Editor");
+            bool isGroupOwner = membership.Group.UserId == currentUserId;
+
+            // doar adminii + ownerul pot face membrii administratori
+            if (!isAdmin && !isGroupOwner)
+            {
+                TempData["message"] = "You don't have permission to make members admins.";
+                TempData["messageType"] = "alert-danger";
+                return RedirectToAction("GroupProfile", new { id = groupId });
+            }
+
+            membership.IsModerator = true;
+            db.SaveChanges();
+    
+            TempData["message"] = "Member promoted to admin successfully.";
+            TempData["messageType"] = "alert-success";
+    
+            // back to group profile
+            return RedirectToAction("GroupProfile", new { id = groupId });
+        }
+
+        [HttpPost("RemoveMember")]
+        [Authorize(Roles = "Admin, User, Editor")]
+        public IActionResult RemoveMember(int groupMemberId)
+        {
+            var membership = db.GroupMembers
+                .Include(gm => gm.Group)
+                .FirstOrDefault(gm => gm.Id == groupMemberId);
+            
+            if (membership == null)
+            {
+                TempData["message"] = "Member not found in the group.";
+                TempData["messageType"] = "alert-danger";
+                return RedirectToAction("Index"); // nu se gaseste membrul -> nu se poate obtine id-ul
+            }
+            
+            int groupId = membership.GroupId.GetValueOrDefault(); // valoarea sau 0 daca e null
+
+            if (membership.Group == null)
+            {
+                TempData["message"] = "Group not found";
+                return RedirectToAction("Index");
+            }
+            
+            var currentUserId = _userManager.GetUserId(User);
+            bool isAdmin = User.IsInRole("Admin");
+            bool isGroupOwner = membership.Group.UserId == currentUserId;
+            
+            bool isCurrentUserModerator = db.GroupMembers.Any(gm => 
+                gm.GroupId == groupId && 
+                gm.UserId == currentUserId && 
+                gm.IsModerator == true);
+
+            // doar adminii + ownerul pot sterge membri
+            if (!isAdmin && !isGroupOwner && !isCurrentUserModerator)
+            {
+                TempData["message"] = "You don't have permission to remove members.";
+                TempData["messageType"] = "alert-danger";
+                return RedirectToAction("GroupProfile", new { id = groupId });
+            }
+
+            // cant remove the owner
+            if (membership.UserId == membership.Group.UserId)
+            {
+                TempData["message"] = "Cannot remove the group owner.";
+                TempData["messageType"] = "alert-warning";
+                return RedirectToAction("GroupProfile", new { id = groupId });
+            }
+            
+            db.GroupMembers.Remove(membership);
+            db.SaveChanges();
+    
+            TempData["message"] = "Member removed successfully.";
+            TempData["messageType"] = "alert-success";
+    
+            // back to group profile
+            return RedirectToAction("GroupProfile", new { id = groupId });
+        }
+        
         // ca sa afisezi butoane de editare/ stergere in view
         private void SetAccessRights()
         {
@@ -332,7 +438,7 @@ namespace OSSocial.Controllers
                 ViewBag.AfisareButoane = true;
             }
             
-            ViewBag.EsteAdmin = User.IsInRole("Admin");
+            ViewBag.IsAdmin = User.IsInRole("Admin");
             
             ViewBag.UserCurent = _user_manager_getuserid_safe();
         }

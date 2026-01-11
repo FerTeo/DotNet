@@ -179,6 +179,7 @@ namespace OSSocial.Models
                 (
                     new Group
                     {
+                        Id = 1,
                         Name = "Muziker",
                         Description = "Group for music enthusiasts where u can post about your passion!",
                         UserId = "8e445865-a24d-4543-a6c6-9443d048cdb5",//musiclover
@@ -186,6 +187,7 @@ namespace OSSocial.Models
                     },
                     new Group
                     {
+                        Id = 2,
                         Name = "Travelling",
                         Description = "Group for people how like to travel and eat good food",
                         UserId = "8e445865-a24d-4543-a6c6-9443d048cdb3",//fernando
@@ -217,14 +219,14 @@ namespace OSSocial.Models
                 },
                 new GroupMember
                 {
-                    UserId = "8e445865-a24d-4543-a6c6-9443d048cdb4", //fernando
+                    UserId = "8e445865-a24d-4543-a6c6-9443d048cdb3", //fernando
                     GroupId = 1, //muziker
                     JoinDate = DateTime.Now,
                     IsModerator = false
                 },
                 new GroupMember
                 {
-                    UserId = "8e445865-a24d-4543-a6c6-9443d048cdb4", //fernando
+                    UserId = "8e445865-a24d-4543-a6c6-9443d048cdb3", //fernando
                     GroupId = 2, //travell
                     JoinDate = DateTime.Now,
                     IsModerator = true
@@ -232,7 +234,7 @@ namespace OSSocial.Models
                 
                 new GroupMember
                 {
-                    UserId = "8e445865-a24d-4543-a6c6-9443d048cdb5", //teo
+                    UserId = "8e445865-a24d-4543-a6c6-9443d048cdb4", //teo
                     GroupId = 2, //travell
                     JoinDate = DateTime.Now,
                     IsModerator = true
@@ -271,7 +273,8 @@ namespace OSSocial.Models
                     Content = "Ce frumoasa e Spania! Am mancat si o paella foarte buna!",
                     Time = DateTime.Now,
                     UserId = "8e445865-a24d-4543-a6c6-9443d048cdb3", // fernando
-                    Media = "/images/c3b7eb59-8fbc-49f3-87f1-0a4726692535_granada.JPG"
+                    Media = "/images/c3b7eb59-8fbc-49f3-87f1-0a4726692535_granada.JPG",
+                    GroupId = null
                 },
                 new Post
                 {
@@ -279,7 +282,8 @@ namespace OSSocial.Models
                     Content = "Found this makeup inspo. So pretty!!",
                     Time = DateTime.Now,
                     UserId = "8e445865-a24d-4543-a6c6-9443d048cdb4", // teo
-                    Media = "/images/a068374d-b18c-4795-98c6-77c6bf98cbe8_makeup.jpg"
+                    Media = "/images/a068374d-b18c-4795-98c6-77c6bf98cbe8_makeup.jpg",
+                    GroupId = null
                 },
                 new Post
                 {
@@ -313,7 +317,8 @@ namespace OSSocial.Models
                 new Reaction
                 {
                     PostId = 1,//postare radiohead teo
-                    UserId = "8e445865-a24d-4543-a6c6-9443d048cdb3"//fernando
+                    UserId = "8e445865-a24d-4543-a6c6-9443d048cdb3",//fernando
+                    DateCreated = DateTime.Now
                 }
             );
             
@@ -328,7 +333,8 @@ namespace OSSocial.Models
                 {
                     Content = "Pacat ca nu au cantat Jigsaw :( In rest a fost absolut superb",
                     PostId = 1, //postarea radiohead teo
-                    UserId = "8e445865-a24d-4543-a6c6-9443d048cdb3"//fernando
+                    UserId = "8e445865-a24d-4543-a6c6-9443d048cdb3",//fernando
+                    DateCreated = DateTime.Now
                 }
             );
             
@@ -343,13 +349,17 @@ namespace OSSocial.Models
                 {
                     FollowerId = "8e445865-a24d-4543-a6c6-9443d048cdb3",//fernando
                     FolloweeId = "8e445865-a24d-4543-a6c6-9443d048cdb4",//teo
-                    Status = FollowStatus.Accepted
+                    Status = FollowStatus.Accepted,
+                    RequestedAt = DateTime.Now, // FIX: Data
+                    RespondedAt = DateTime.Now
                 },
                 new Follow
                 {
                     FollowerId = "8e445865-a24d-4543-a6c6-9443d048cdb4",//teo
                     FolloweeId = "8e445865-a24d-4543-a6c6-9443d048cdb3",//fernando
-                    Status = FollowStatus.Accepted
+                    Status = FollowStatus.Accepted,
+                    RequestedAt = DateTime.Now,
+                    RespondedAt = DateTime.Now
                 }
                 
             );
