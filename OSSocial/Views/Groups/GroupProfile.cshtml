@@ -159,13 +159,19 @@
                             <strong>@(member.User?.UserName ?? "Unknown User")</strong>
                         </span>
                         
-                        @if (ViewBag.IsAdmin == true || ViewBag.IsOwner == true)
+                        @if (ViewBag.IsAdmin == true || ViewBag.IsOwner == true || ViewBag.IsModerator == true)
                         {
                             <form method="post" asp-controller="Groups" asp-action="RemoveMember" class="m-0">
                                 <input type="hidden" name="groupMemberId" value="@member.Id" />
                                 <button type="submit" class="btn btn-outline-danger btn-sm" 
                                         onclick="return confirm('Are you sure you want to remove this member?');">
                                     Remove
+                                </button>
+                            </form>
+                            <form method="post" asp-controller="Groups" asp-action="MakeAdmin" class="m-0">
+                                <input type="hidden" name="groupMemberId" value="@member.Id" />
+                                <button type="submit" class="btn btn-outline-danger btn-sm">
+                                    Make Admin
                                 </button>
                             </form>
                         }

@@ -78,7 +78,7 @@ namespace OSSocial.Controllers
                 .Include(g => g.User)
                 .Where(g => g.IsPublic)
                 .ToList();
-
+            
             ViewBag.PublicGroups = publicGroups;
 
             return View();
@@ -109,7 +109,7 @@ namespace OSSocial.Controllers
             bool isAdmin = User?.IsInRole("Admin") == true;
             bool isOwner = group.UserId == currentUserId;
             bool isMember = db.GroupMembers.Any(gm => gm.GroupId == group.Id && gm.UserId == currentUserId);
-
+            bool isModerator = db.GroupMembers.Any(gm => gm.GroupId == group.Id && gm.UserId == currentUserId && gm.IsModerator);
             bool canView = group.IsPublic || isAdmin || isOwner || isMember;
 
             // expose flags to the view so it can show a friendly message / hide controls when necessary
@@ -117,6 +117,7 @@ namespace OSSocial.Controllers
             ViewBag.IsMember = isMember;
             ViewBag.IsOwner = isOwner;
             ViewBag.IsAdmin = isAdmin;
+            ViewBag.IsModerator = isModerator;
             
             // pt a afisa toti membrii grupului
             var member = db.GroupMembers 
@@ -276,6 +277,52 @@ namespace OSSocial.Controllers
             }
             
         }
+        
+        [HttpPost("MakeAdmin")]
+        [Authorize(Roles =  "Admin, User, Editor")]
+        public IActionResult MakeAdmin(int groupMemberId)
+        {
+            var membership = db.GroupMembers
+                .Include(gm => gm.Group)
+                .FirstOrDefault(gm => gm.Id == groupMemberId);
+            
+            if (membership == null)
+            {
+                TempData["message"] = "Member not found in the group.";
+                TempData["messageType"] = "alert-danger";
+                return RedirectToAction("Index"); // nu se gaseste membrul -> nu se poate obtine id-ul
+            }
+            
+            int groupId = membership.GroupId.GetValueOrDefault(); // valoarea sau 0 daca e null
+
+            if (membership.Group == null)
+            {
+                TempData["message"] = "Group not found";
+                return RedirectToAction("Index");
+            }
+            
+            var currentUserId = _userManager.GetUserId(User);
+            bool isAdmin = User.IsInRole("Admin");
+            bool isModerator = User.IsInRole("Editor");
+            bool isGroupOwner = membership.Group.UserId == currentUserId;
+
+            // doar adminii + ownerul pot face membrii administratori
+            if (!isAdmin && !isGroupOwner)
+            {
+                TempData["message"] = "You don't have permission to make members admins.";
+                TempData["messageType"] = "alert-danger";
+                return RedirectToAction("GroupProfile", new { id = groupId });
+            }
+
+            membership.IsModerator = true;
+            db.SaveChanges();
+    
+            TempData["message"] = "Member promoted to admin successfully.";
+            TempData["messageType"] = "alert-success";
+    
+            // back to group profile
+            return RedirectToAction("GroupProfile", new { id = groupId });
+        }
 
         [HttpPost("RemoveMember")]
         [Authorize(Roles = "Admin, User, Editor")]
@@ -303,9 +350,14 @@ namespace OSSocial.Controllers
             var currentUserId = _userManager.GetUserId(User);
             bool isAdmin = User.IsInRole("Admin");
             bool isGroupOwner = membership.Group.UserId == currentUserId;
+            
+            bool isCurrentUserModerator = db.GroupMembers.Any(gm => 
+                gm.GroupId == groupId && 
+                gm.UserId == currentUserId && 
+                gm.IsModerator == true);
 
             // doar adminii + ownerul pot sterge membri
-            if (!isAdmin && !isGroupOwner)
+            if (!isAdmin && !isGroupOwner && !isCurrentUserModerator)
             {
                 TempData["message"] = "You don't have permission to remove members.";
                 TempData["messageType"] = "alert-danger";
