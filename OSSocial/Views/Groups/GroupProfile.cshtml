@@ -25,7 +25,7 @@
         </div>
         
         @* JOIN GROUP button (daca esti admin poti intra in orice grup!) *@
-        @if (ViewBag.IsMember != true && (Model.IsPublic || ViewBag.EsteAdmin == true))
+        @if (ViewBag.IsMember != true && (Model.IsPublic || ViewBag.IsAdmin == true))
         {
             <div class="card-footer">
                 <form method="post" asp-controller="Groups" asp-action="JoinGroup">
@@ -143,16 +143,39 @@
 </div>
 
 @* LISTA MEMBRILOR DIN GRUP *@
-<div class="col-md-8 offset-md-2 mb-4">
-    <div>
-        <h4 class="mt-5">Other Members</h4>
-        <ul>
-        @foreach (var member in ViewBag.Members)
-        {
-            <li>
-                <i class="bi bi-person"></i> @(member.User?.UserName ?? "Unknown User")
-            </li>
-            }
-        </ul> 
+<div class="col-md-8 offset-md-2 mb-5">
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
+            <h4 class="mb-0">Other Members</h4>
         </div>
+        <ul class="list-group list-group-flush">
+            @if (ViewBag.Members != null)
+            {
+                foreach (var member in ViewBag.Members)
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>
+                            <i class="bi bi-person-fill text-primary me-2"></i> 
+                            <strong>@(member.User?.UserName ?? "Unknown User")</strong>
+                        </span>
+                        
+                        @if (ViewBag.IsAdmin == true || ViewBag.IsOwner == true)
+                        {
+                            <form method="post" asp-controller="Groups" asp-action="RemoveMember" class="m-0">
+                                <input type="hidden" name="groupMemberId" value="@member.Id" />
+                                <button type="submit" class="btn btn-outline-danger btn-sm" 
+                                        onclick="return confirm('Are you sure you want to remove this member?');">
+                                    Remove
+                                </button>
+                            </form>
+                        }
+                    </li>
+                }
+            }
+        </ul>
+        @if(TempData["message"] != null)
+        {
+            <div class="alert alert-info m-3">@TempData["message"]</div>
+        }
+    </div>
 </div>
