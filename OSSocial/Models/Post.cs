@@ -39,7 +39,7 @@ namespace OSSocial.Models
         // // IFormFile = Represents a file sent with the HttpRequest.
 
         // foreign key-ul utilizatorului 
-        public string UserId { get; set; } // string pt ca identity users maps to string
+        public string? UserId { get; set; } // string pt ca identity users maps to string
         
         public virtual ApplicationUser? User { get; set; }
         

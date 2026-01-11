@@ -12,9 +12,7 @@ using ContentResult = OSSocial.Services.ContentResult;
 namespace OSSocial.Controllers
 {
     [Route("Post")]
-    public class PostController (
-        UserManager<ApplicationUser> _userManager,
-        ApplicationDbContext _context) : Controller
+    public class PostController : Controller
     {
         private readonly ApplicationDbContext db;
         private readonly UserManager<ApplicationUser> _userManager;
@@ -48,8 +46,8 @@ namespace OSSocial.Controllers
                 .Include(p => p.Comments) // nr comentarii
                 .Include(p => p.Reactions) // numar like-uri
                 .Where(p => p.User.IsPrivate == false &&
-                            !p.Reactions.Any(r => r.UserId == userManager.GetUserId(User)) && 
-                            p.UserId != userManager.GetUserId(User)) // doar postarile userilor publici la care NU s-a dat like inca
+                            !p.Reactions.Any(r => r.UserId == _userManager.GetUserId(User)) && 
+                            p.UserId != _userManager.GetUserId(User)) // doar postarile userilor publici la care NU s-a dat like inca
                 .OrderByDescending(p => p.Time) // cele mai noi postari prima data
                 .ToList();
             
@@ -62,7 +60,7 @@ namespace OSSocial.Controllers
         [HttpGet("Feed")]
         public IActionResult Feed()
         {
-            var currentUserID = userManager.GetUserId(User);
+            var currentUserID = _userManager.GetUserId(User);
             
             // lista de id-uri ale userilor caruia currentUser ii da follow
             var following = db.Follows
@@ -76,7 +74,7 @@ namespace OSSocial.Controllers
                 .Include(p => p.Comments)  // nr comentariilor
                 .Include(p => p.Reactions) // includem reactiile
                 .Where(p => following.Contains(p.UserId) && 
-                            !p.Reactions.Any(r => r.UserId == userManager.GetUserId(User)
+                            !p.Reactions.Any(r => r.UserId == _userManager.GetUserId(User)
                             )) // la fel ca la explore -> totusi fiindca following nu primeste niciodata postarile user-ului curent nu tb sa le scoatem printr-o conditie where 
                 .OrderByDescending(p => p.Time) // crescator dupa timp
                 .ToList();
