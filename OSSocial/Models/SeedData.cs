@@ -33,104 +33,103 @@ namespace OSSocial.Models
             
             context.SaveChanges();
         }
-
-       
         private static void Seed_Users(ApplicationDbContext context)
         {
-            // o noua instanta pe care o vom utiliza pentru crearea parolelor utilizatorilor
-            // parolele sunt de tip hash
             var hasher = new PasswordHasher<ApplicationUser>();
-            
-            context.Users.AddRange
-            (
-                new ApplicationUser
-                {
-                    Id = "8e445865-a24d-4543-a6c6-9443d048cdb0", // primary key
-                    UserName = "admin",
-                    EmailConfirmed = true,
-                    NormalizedEmail = "ADMIN@TEST.COM",
-                    Email = "admin@test.com",
-                    NormalizedUserName = "ADMIN",
-                    PasswordHash = hasher.HashPassword(null, "Admin123!"),
-                    DisplayName = "Admin",
-                    Bio = "Admin of the web application",
-                    PhoneNumber = "0888888888",
-                    PhoneNumberConfirmed = true,
-                },
-                new ApplicationUser
-                {
-                    Id = "8e445865-a24d-4543-a6c6-9443d048cdb1", // primary key
-                    UserName = "editor",
-                    EmailConfirmed = true,
-                    NormalizedEmail = "EDITOR@TEST.COM",
-                    Email = "editor@test.com",
-                    NormalizedUserName = "editor",
-                    PasswordHash = hasher.HashPassword(null, "Editor123!"),
-                    DisplayName = "Editor", 
-                    Bio = "Your favourite editor",
-                    PhoneNumber = "0888888888",
-                    PhoneNumberConfirmed = true,
-                },
-                new ApplicationUser
-                {
-                    Id = "8e445865-a24d-4543-a6c6-9443d048cdb2", // primary key
-                    UserName = "user",
-                    EmailConfirmed = true,
-                    NormalizedEmail = "USER@TEST.COM",
-                    Email = "user@test.com",
-                    NormalizedUserName = "USER",
-                    PasswordHash = hasher.HashPassword(null, "User123!"),
-                    DisplayName = "User",
-                    Bio = "Your favourite user",
-                    PhoneNumber = "0888888888",
-                    PhoneNumberConfirmed = true,
-                },
-                new ApplicationUser
-                {
-                    Id = "8e445865-a24d-4543-a6c6-9443d048cdb3", // primary key
-                    UserName = "fernando",
-                    EmailConfirmed = true,
-                    NormalizedEmail = "FERNANDO@TEST.COM",
-                    Email = "fernando@test.com",
-                    PhoneNumber = "0666666666",
-                    NormalizedUserName = "FERNANDO",
-                    PasswordHash = hasher.HashPassword(null, "Fernando1!"),
-                    DisplayName = "Fernando-Emanuel",
-                    Bio = "Your one and only fernando",
-                    ProfileImageUrl = "/images/b19f355f-9ec5-4047-bd3d-d129db850b79_emo.JPG",
-                    IsPrivate = true
-                },
-                new ApplicationUser
-                {
-                    Id = "8e445865-a24d-4543-a6c6-9443d048cdb4", // primary key
-                    UserName = "r0scat",
-                    EmailConfirmed = true,
-                    NormalizedEmail = "teo@test.COM",
-                    Email = "teo@test.com",
-                    PhoneNumber = "0676767677",
-                    NormalizedUserName = "R0SCAT",
-                    PasswordHash = hasher.HashPassword(null, "Teo123!"),
-                    DisplayName = "Teo",
-                    ProfileImageUrl = "/images/04def228-790e-403d-ae29-f5bebf347492_cute.JPG",
-                    IsPrivate = false
-                },
-                new ApplicationUser
-                {
-                    Id = "8e445865-a24d-4543-a6c6-9443d048cdb5", // primary key
-                    UserName = "musiclover",
-                    EmailConfirmed = true,
-                    NormalizedEmail = "MUSICLOVER@TEST.COM",
-                    Email = "musiclover@test.com",
-                    PhoneNumber = "0666666666",
-                    NormalizedUserName = "MUSICLOVER",
-                    PasswordHash = hasher.HashPassword(null, "Musiclover123!"),
-                    DisplayName = "Music Lover",
-                    Bio = "Hi! I really love music",
-                    ProfileImageUrl = "/images/2424195d-2666-4529-bed6-046bdf17f19b_ipod.jpg",
-                    IsPrivate = true
-                }
-            );
-            
+
+            var admin = new ApplicationUser
+            {
+                Id = "8e445865-a24d-4543-a6c6-9443d048cdb0",
+                UserName = "admin",
+                EmailConfirmed = true,
+                NormalizedEmail = "ADMIN@TEST.COM",
+                Email = "admin@test.com",
+                NormalizedUserName = "ADMIN",
+                DisplayName = "Admin",
+                Bio = "Admin of the web application",
+                PhoneNumber = "0888888888",
+                PhoneNumberConfirmed = true,
+            };
+            admin.PasswordHash = hasher.HashPassword(admin, "Admin123!");
+
+            var editor = new ApplicationUser
+            {
+                Id = "8e445865-a24d-4543-a6c6-9443d048cdb1",
+                UserName = "editor",
+                EmailConfirmed = true,
+                NormalizedEmail = "EDITOR@TEST.COM",
+                Email = "editor@test.com",
+                NormalizedUserName = "editor",
+                DisplayName = "Editor",
+                Bio = "Your favourite editor",
+                PhoneNumber = "0888888888",
+                PhoneNumberConfirmed = true,
+            };
+            editor.PasswordHash = hasher.HashPassword(editor, "Editor123!");
+
+            var user = new ApplicationUser
+            {
+                Id = "8e445865-a24d-4543-a6c6-9443d048cdb2",
+                UserName = "user",
+                EmailConfirmed = true,
+                NormalizedEmail = "USER@TEST.COM",
+                Email = "user@test.com",
+                NormalizedUserName = "USER",
+                DisplayName = "User",
+                Bio = "Your favourite user",
+                PhoneNumber = "0888888888",
+                PhoneNumberConfirmed = true,
+            };
+            user.PasswordHash = hasher.HashPassword(user, "User123!");
+
+            var fernando = new ApplicationUser
+            {
+                Id = "8e445865-a24d-4543-a6c6-9443d048cdb3",
+                UserName = "fernando",
+                EmailConfirmed = true,
+                NormalizedEmail = "FERNANDO@TEST.COM",
+                Email = "fernando@test.com",
+                PhoneNumber = "0666666666",
+                NormalizedUserName = "FERNANDO",
+                DisplayName = "Fernando-Emanuel",
+                Bio = "Your one and only fernando",
+                ProfileImageUrl = "/images/b19f355f-9ec5-4047-bd3d-d129db850b79_emo.JPG",
+                IsPrivate = true
+            };
+            fernando.PasswordHash = hasher.HashPassword(fernando, "Fernando1!");
+
+            var r0scat = new ApplicationUser
+            {
+                Id = "8e445865-a24d-4543-a6c6-9443d048cdb4",
+                UserName = "r0scat",
+                EmailConfirmed = true,
+                NormalizedEmail = "teo@test.COM",
+                Email = "teo@test.com",
+                PhoneNumber = "0676767677",
+                NormalizedUserName = "R0SCAT",
+                DisplayName = "Teo",
+                ProfileImageUrl = "/images/04def228-790e-403d-ae29-f5bebf347492_cute.JPG",
+                IsPrivate = false
+            };
+            r0scat.PasswordHash = hasher.HashPassword(r0scat, "Teo123!");
+
+            var musiclover = new ApplicationUser
+            {
+                Id = "8e445865-a24d-4543-a6c6-9443d048cdb5",
+                UserName = "musiclover",
+                EmailConfirmed = true,
+                NormalizedEmail = "MUSICLOVER@TEST.COM",
+                Email = "musiclover@test.com",
+                PhoneNumber = "0666666666",
+                NormalizedUserName = "MUSICLOVER",
+                DisplayName = "Music Lover",
+                Bio = "Hi! I really love music",
+                ProfileImageUrl = "/images/2424195d-2666-4529-bed6-046bdf17f19b_ipod.jpg",
+                IsPrivate = true
+            };
+            musiclover.PasswordHash = hasher.HashPassword(musiclover, "Musiclover123!");
+
+            context.Users.AddRange(admin, editor, user, fernando, r0scat, musiclover);
             context.SaveChanges();
         }
         

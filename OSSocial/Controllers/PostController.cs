@@ -6,7 +6,6 @@ using OSSocial.Data;
 using OSSocial.Models;
 using OSSocial.Services;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity;
 using ContentResult = OSSocial.Services.ContentResult;
 
 namespace OSSocial.Controllers
@@ -96,7 +95,8 @@ namespace OSSocial.Controllers
                 .Include(p => p.User)      //  pentru username, poza profil)
                 .Include(p => p.Comments)  // nr comentariilor
                 .Include(p => p.Reactions) // includem reactiile
-                .Where(p => following.Contains(p.UserId) && 
+                .Where(p => p.UserId!=null &&
+                    following.Contains(p.UserId) && 
                             !p.Reactions.Any(r => r.UserId == _userManager.GetUserId(User)
                             )) // la fel ca la explore -> totusi fiindca following nu primeste niciodata postarile user-ului curent nu tb sa le scoatem printr-o conditie where
                 .OrderByDescending(p => p.Time) // crescator dupa timp
