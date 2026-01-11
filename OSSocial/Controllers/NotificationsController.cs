@@ -24,14 +24,31 @@ namespace OSSocial.Controllers
 
 
 
-
+        /// <summary>
+        ///  Crearea unei notificari (apelate de controllerele Follow si Groups
+        /// </summary>
+        /// <param name="userId">
+        ///  Id-ul utilizatorului care primeste notificarea 
+        /// </param>
+        /// <param name="type">
+        /// Tipul notificarii (follow request sau request de intrare in grup)
+        /// </param>
+        /// <param name="actorId">
+        ///  Cel care a declansat trimiterea notificarii
+        /// </param>
+        /// <param name="referenceId">
+        ///  Obiectul catre care face trimitire notificarea
+        /// </param>
+        /// <param name="message">
+        ///  Mesajul notificarii
+        /// </param>
+        /// <returns></returns>
         
-        [NonAction]
+        [NonAction] //Non action pentru ca user-ul nu intervine in notificari sunt facute de sistem
         public async Task<Notification> CreateNotificationAsync(string userId, NotificationType type, string? actorId = null,
             string? referenceId = null, string? message = null)
         {
             //cream notificarea din alte controllere
-            
             var notification = new Notification
             {
                 UserId = userId,
@@ -48,27 +65,41 @@ namespace OSSocial.Controllers
             return notification;
         }
         
+        
+        
+        /// <summary>
+        ///  Afisarea notificarilor utilizatorului curent
+        /// </summary>
+        /// <returns></returns>
         public async Task<IActionResult> Index()
         {
-            var userId = _userManager.GetUserId(User);
-            if (userId == null)
+            var currentUserId = _userManager.GetUserId(User);
+            if (currentUserId == null)
             {
                 return RedirectToRoute("/Identity/Account/Login");
             }
 
             var notifications = await _db.Notifications
-                .Where(n => n.UserId == userId)
+                .Where(n => n.UserId == currentUserId)
                 .OrderByDescending(n => n.Date)
                 .ToListAsync();
             
             return View("~/Views/Notification/Index.cshtml", notifications);
         }
-
+        
+        
+        /// <summary>
+        ///  Citirea unei notificari (adica o stergem)
+        /// </summary>
+        /// <param name="id">
+        ///  Id-ul notificarii pe care o citim
+        /// </param>
+        /// <returns></returns>
         [HttpPost("ReadNotification/{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var userId = _userManager.GetUserId(User);
-            if (userId == null)
+            var currentUserId = _userManager.GetUserId(User);
+            if (currentUserId == null)
             {
                 return RedirectToRoute("/Identity/Account/Login");
             }
@@ -87,12 +118,20 @@ namespace OSSocial.Controllers
 
             return RedirectToAction(nameof(Index));
         }
-
+        
+        
+        /// <summary>
+        /// Acceptarea unei notificari
+        /// </summary>
+        /// <param name="id">
+        /// Id-ul unei notificarii
+        /// </param>
+        /// <returns></returns>
         [HttpPost("Accept/{id}")]
         public async Task<IActionResult> Accept(int id)
         {
-            var userId = _userManager.GetUserId(User);
-            if (userId == null)
+            var currentUserId = _userManager.GetUserId(User);
+            if (currentUserId == null)
             {
                 return RedirectToRoute("/Identity/Account/Login");
             }
@@ -104,7 +143,7 @@ namespace OSSocial.Controllers
                 return NotFound();
             }
             
-
+            //notificare de tip follow
             if (notification.Type == NotificationType.Follow)
             {
                 if (string.IsNullOrEmpty(notification.ActorUserId))
@@ -114,7 +153,7 @@ namespace OSSocial.Controllers
 
                 var followerId = notification.ActorUserId;
                 var follow = await _db.Follows
-                    .FirstOrDefaultAsync(f => f.FollowerId == followerId && f.FolloweeId == userId);
+                    .FirstOrDefaultAsync(f => f.FollowerId == followerId && f.FolloweeId == currentUserId);
 
                 if (follow != null)
                 {
@@ -126,7 +165,7 @@ namespace OSSocial.Controllers
                     _db.Follows.Add(new Follow
                     {
                         FollowerId = followerId,
-                        FolloweeId = userId,
+                        FolloweeId = currentUserId,
                         Status = FollowStatus.Accepted,
                         RequestedAt = DateTime.UtcNow,
                         RespondedAt = DateTime.UtcNow
@@ -139,7 +178,7 @@ namespace OSSocial.Controllers
                     return BadRequest();
 
                 // convertim din string in int
-                if (!int.TryParse(notification.ReferenceId, out var groupId))
+                if (!int.TryParse((string?)notification.ReferenceId, out var groupId))
                     return BadRequest();
 
                 var group = await _db.Groups.FindAsync(groupId);

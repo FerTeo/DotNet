@@ -16,12 +16,18 @@ public class FollowController
     private readonly ApplicationDbContext _db=context;
     private readonly UserManager<ApplicationUser> _userManager=userManager;
 
-
+    
+    /// <summary>
+    ///  Urmarire unui utilizator
+    /// </summary>
+    /// <param name="targetId">
+    /// Id-ul utilizatorului pe care user-ul il urmaresye
+    /// </param>
+    /// <returns></returns>
 
     [HttpPost]
     public async Task<IActionResult> Follow(string targetId)
     {
-        //userul pe care vrem sa il urmarim
         var targetUser = await _userManager.FindByIdAsync(targetId);
         if (targetUser == null)
         {
@@ -29,7 +35,7 @@ public class FollowController
             return RedirectToAction("Index", "Profiles");
         }
 
-        // verificam userul curent
+
         var currentUser = await _userManager.GetUserAsync(User);
         if (currentUser == null)
         {
@@ -37,7 +43,7 @@ public class FollowController
             //redirectionam inapoi pe profilul targetului
             return RedirectToAction("Show", "Profiles", new { username = targetUser.UserName });
         }
-
+        
         if (currentUser.Id == targetId)
         {
             TempData["Error"] = "You cannot follow yourself.";
@@ -104,6 +110,14 @@ public class FollowController
         return RedirectToAction("Show", "Profiles", new { username = targetUser.UserName });
 
     }
+    
+    /// <summary>
+    ///  Unfollow unui utilizator
+    /// </summary>
+    /// <param name="targetId">
+    /// Id-ul userului caruia vrem sa ii dam unfollow
+    /// </param>
+    /// <returns></returns>
 
     [HttpPost]
     public async Task<IActionResult> Unfollow(string targetId)
