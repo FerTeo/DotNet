@@ -6,17 +6,17 @@ using OSSocial.Models;
 
 namespace OSSocial.Controllers;
 
-public class FollowController : Controller
+public class FollowController
+(
+    ApplicationDbContext context,
+    UserManager<ApplicationUser> userManager,
+    RoleManager<IdentityRole> roleManager
+) : Controller
 {
-    private readonly ApplicationDbContext _db;
-    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly ApplicationDbContext _db=context;
+    private readonly UserManager<ApplicationUser> _userManager=userManager;
 
-    //constructor
-    public FollowController(ApplicationDbContext db, UserManager<ApplicationUser> userManager)
-    {
-        _db = db;
-        _userManager = userManager;
-    }
+
 
     [HttpPost]
     public async Task<IActionResult> Follow(string targetId)

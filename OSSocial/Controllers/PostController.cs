@@ -12,24 +12,19 @@ using ContentResult = OSSocial.Services.ContentResult;
 namespace OSSocial.Controllers
 {
     [Route("Post")]
-    public class PostController : Controller
+    public class PostController 
+    (
+        ApplicationDbContext context,
+        UserManager<ApplicationUser> userManager,
+        RoleManager<IdentityRole> roleManager,
+        IContentAnalysisService contentService
+    ) : Controller
     {
-        private readonly ApplicationDbContext db;
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly RoleManager<IdentityRole> _roleManager;
-        private readonly IContentAnalysisService _contentService;
+        private readonly ApplicationDbContext _db=context;
+        private readonly UserManager<ApplicationUser> _userManager=userManager;
+        private readonly RoleManager<IdentityRole> _roleManager=roleManager;
+        private readonly IContentAnalysisService _contentService=contentService;
 
-        public PostController(
-            ApplicationDbContext context,
-            UserManager<ApplicationUser> userManager, 
-            RoleManager<IdentityRole> roleManager, 
-            IContentAnalysisService contentService)
-        {
-            db = context;
-            _userManager = userManager;
-            _roleManager = roleManager;
-            _contentService = contentService;
-        }
 
         [HttpGet("")]
         public IActionResult Index()
@@ -41,7 +36,7 @@ namespace OSSocial.Controllers
         public IActionResult Explore()
         {
             // practic functie de index dar in social media terms
-            var posts = db.Posts
+            var posts = _db.Posts
                 .Include(p => p.User) // nume autor
                 .Include(p => p.Comments) // nr comentarii
                 .Include(p => p.Reactions) // numar like-uri
@@ -63,13 +58,13 @@ namespace OSSocial.Controllers
             var currentUserID = _userManager.GetUserId(User);
             
             // lista de id-uri ale userilor caruia currentUser ii da follow
-            var following = db.Follows
+            var following = _db.Follows
                 .Where(f => f.FollowerId == currentUserID && f.Status == FollowStatus.Accepted)
                 .Select(f => f.FolloweeId)
                 .ToList();
             
             // postarile userilor din lista 'following'
-            var posts = db.Posts
+            var posts = _db.Posts
                 .Include(p => p.User)      //  pentru username, poza profil)
                 .Include(p => p.Comments)  // nr comentariilor
                 .Include(p => p.Reactions) // includem reactiile
@@ -89,7 +84,7 @@ namespace OSSocial.Controllers
         [HttpGet("Details/{id}")] // GET /Post/Details/5
         public IActionResult Details(int id, int? edit)
         {
-            Post? postare = db.Posts
+            Post? postare = _db.Posts
                 .Include(p => p.User)                    // Include Post Author
                 .Include(p => p.Comments)                // Include Comments
                 .ThenInclude(c => c.User)                // Include Comment Authors
@@ -249,14 +244,14 @@ namespace OSSocial.Controllers
                 postare.Media = dbPath;
             }
             
-            db.Posts.Add(postare);
-            db.SaveChanges();
+            _db.Posts.Add(postare);
+            _db.SaveChanges();
             
             // verifici daca postarea apartine unui grup
             if (postare.GroupId != null && postare.GroupId != 0)
             {
                 var groupId = postare.GroupId.Value;
-                var group = db.Groups.Find(groupId);
+                var group = _db.Groups.Find(groupId);
                 if (group != null)
                 {
                     // allow posting user to be redirected to the group page if they have access
@@ -265,7 +260,7 @@ namespace OSSocial.Controllers
 
                     bool isAdmin = User?.IsInRole("Admin") == true;
                     bool isOwner = group.UserId == creatorUserId;
-                    bool isMember = db.GroupMembers.Any(gm => gm.GroupId == groupId && gm.UserId == creatorUserId);
+                    bool isMember = _db.GroupMembers.Any(gm => gm.GroupId == groupId && gm.UserId == creatorUserId);
 
                     if (isAdmin || isOwner || isMember)
                     {
@@ -282,7 +277,7 @@ namespace OSSocial.Controllers
         [HttpGet("EditPost/{id}")] // GET /Post/EditPost/5
         public IActionResult EditPost(int id)
         {
-            Post? postare = db.Posts.Find(id);
+            Post? postare = _db.Posts.Find(id);
             if (postare == null)
             {
                 return NotFound();
@@ -304,7 +299,7 @@ namespace OSSocial.Controllers
         [Authorize]
         public IActionResult EditPost(int id, Post postareFormular)
         {
-            Post? postareModif = db.Posts.Find(id);
+            Post? postareModif = _db.Posts.Find(id);
             if (postareModif == null)
             {
                 return NotFound();
@@ -315,7 +310,7 @@ namespace OSSocial.Controllers
                 postareModif.Title = postareFormular.Title;
                 postareModif.Content = postareFormular.Content;
 
-                db.SaveChanges();
+                _db.SaveChanges();
                 
                 // postareModif.Time; pt ca pastrez doar ora postarii nu modific timpul, in viitor va tb adaugata chestia asta (adic edit time; sa apara ca postarea a fost editata)
                 
@@ -330,7 +325,7 @@ namespace OSSocial.Controllers
         [HttpPost("Delete/{id}")]
         public IActionResult Delete(int id)
         {
-            Post? postare = db.Posts.Find(id);
+            Post? postare = _db.Posts.Find(id);
             if (postare == null)
             {
                 return NotFound();
@@ -343,8 +338,8 @@ namespace OSSocial.Controllers
                 return Forbid();
             }
             
-            db.Posts.Remove(postare);
-            db.SaveChanges();
+            _db.Posts.Remove(postare);
+            _db.SaveChanges();
             
             return RedirectToAction("Feed");
         }

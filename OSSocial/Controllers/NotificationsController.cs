@@ -11,24 +11,20 @@ using Microsoft.EntityFrameworkCore;
 
 namespace OSSocial.Controllers
 {
-    [Authorize]
-    [Route("Notifications")]
-    public class NotificationsController : Controller
+
+    public class NotificationsController
+    (
+        ApplicationDbContext context,
+        UserManager<ApplicationUser> userManager,
+        RoleManager<IdentityRole> roleManager
+    ) : Controller
     {
-        private readonly ApplicationDbContext _db;
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly ApplicationDbContext _db=context;
+        private readonly UserManager<ApplicationUser> _userManager=userManager;
 
-        public NotificationsController(ApplicationDbContext context,
-            UserManager<ApplicationUser> userManager,
-            RoleManager<IdentityRole> roleManager)
-        {
-            _db = context;
-            _userManager = userManager;
-            _roleManager = roleManager;
-        }
 
-        
+
+
         
         [NonAction]
         public async Task<Notification> CreateNotificationAsync(string userId, NotificationType type, string? actorId = null,

@@ -8,9 +8,14 @@ using Microsoft.EntityFrameworkCore;
 namespace OSSocial.Controllers
 {
 
-    public class ReactionController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager) : Controller
+    public class ReactionController
+    (
+        ApplicationDbContext context,
+        UserManager<ApplicationUser> userManager,
+        RoleManager<IdentityRole> roleManager
+    ) : Controller
     {
-        private readonly ApplicationDbContext db = context;
+        private readonly ApplicationDbContext _db = context;
         private readonly UserManager<ApplicationUser> _userManager = userManager;
         private readonly RoleManager<IdentityRole> _roleManager = roleManager;
 
@@ -18,7 +23,7 @@ namespace OSSocial.Controllers
         //aflarea nr de reactii ale unei postari
         public IActionResult GetCounts(int postId)
         {
-            var list = db.Reactions
+            var list = _db.Reactions
                 .Where(r => r.PostId == postId)
                 .ToList();
 
@@ -39,8 +44,8 @@ namespace OSSocial.Controllers
 
             if (ModelState.IsValid)
             {
-                db.Reactions.Add(reaction);
-                db.SaveChanges();
+                _db.Reactions.Add(reaction);
+                _db.SaveChanges();
                 
             }
             return Redirect("/Post/Details/" + reaction.PostId);
@@ -55,7 +60,7 @@ namespace OSSocial.Controllers
                 return Unauthorized();
             }
 
-            var existingReaction = db.Reactions
+            var existingReaction = _db.Reactions
                 .FirstOrDefault(r => r.PostId == postId && r.UserId == userId);
 
 
@@ -69,16 +74,16 @@ namespace OSSocial.Controllers
                     DateCreated = DateTime.Now,
                 };
 
-                db.Reactions.Add(reaction);
+                _db.Reactions.Add(reaction);
 
             }
             else
             {
-                db.Reactions.Remove(existingReaction);
+                _db.Reactions.Remove(existingReaction);
 
             }
 
-            db.SaveChanges();
+            _db.SaveChanges();
 
             return RedirectToAction("Details","Post", new { id = postId });
         }
