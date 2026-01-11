@@ -142,14 +142,16 @@ namespace OSSocial.Controllers
                 if (string.IsNullOrEmpty(notification.ActorUserId) || string.IsNullOrEmpty(notification.ReferenceId))
                     return BadRequest();
 
+                // convertim din string in int
+                if (!int.TryParse(notification.ReferenceId, out var groupId))
+                    return BadRequest();
 
-
-                var group = await _db.Groups.FindAsync(notification.ReferenceId);
+                var group = await _db.Groups.FindAsync(groupId);
                 if (group == null) return NotFound();
 
-                // SIMPLIFICAT: doar schimbă Status din "Pending" în "Approved"
+                // schimbam statusul
                 var member = await _db.GroupMembers.FirstOrDefaultAsync(gm =>
-                    gm.GroupId == group.Id && gm.UserId == notification.ActorUserId);
+                    gm.GroupId == group.Id && gm.UserId == notification.ActorUserId && gm.Status == RequestStatus.Pending);
 
                 if (member != null)
                 {

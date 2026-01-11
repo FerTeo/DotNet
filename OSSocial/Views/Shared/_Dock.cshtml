@@ -18,6 +18,7 @@
     var isPhotosApp = currentController?.ToLowerInvariant() == "post"; 
     var isProfilesApp = currentController?.ToLowerInvariant() == "profiles" || currentAction?.ToLowerInvariant() == "show";
     var isSettingsApp = currentArea?.ToLowerInvariant() == "identity";
+    var isNotification = currentController?.ToLowerInvariant() == "notifications";
                             
 }
 <nav class="navbar navbar-light bg-white border-top fixed-bottom" role="navigation" aria-label="Dock navigation">
@@ -63,12 +64,19 @@
             @if (userLogat)
             {
                 <li class="nav-item mx-2">
+                    <a class="nav-link text-center @(isNotification ? "active-app" : "")" asp-controller="Notifications" asp-action="Index" title="Users" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Notifications" aria-label="Notifications">
+                        <img src="@Url.Content("~/assets/icons/bell.svg")" alt="bell" width="36" height="36"/>
+                    </a>
+                </li>
+                
+                <li class="nav-item mx-2">
                     <form  class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
                         <button type="submit" class="nav-link text-center" title="Logout" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Logout" aria-label="Settings">
                             <img src="@Url.Content("~/assets/icons/box-arrow-left.svg")" alt="Logout" width="36" height="36"/>
                         </button>
                     </form>
                 </li>
+                
             }
 
         </ul>
