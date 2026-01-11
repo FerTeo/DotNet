@@ -140,37 +140,22 @@ namespace OSSocial.Controllers
             else if (notification.Type == NotificationType.GroupRequest)
             {
                 if (string.IsNullOrEmpty(notification.ActorUserId) || string.IsNullOrEmpty(notification.ReferenceId))
-                {
                     return BadRequest();
-                }
 
-                if (!int.TryParse(notification.ReferenceId ?? string.Empty, out var groupId))
-                {
-                    return BadRequest();
-                }
 
-                var group = await _db.Groups.FindAsync(groupId);
+
+                var group = await _db.Groups.FindAsync(notification.ReferenceId);
                 if (group == null) return NotFound();
 
-                var isOwner = group.UserId == userId;
-                var isSiteAdmin = User.IsInRole("Admin");
-                var isGroupAdmin = await _db.GroupMembers
-                    .AnyAsync(gm => gm.GroupId == groupId && gm.UserId == userId && gm.IsModerator);
+                // SIMPLIFICAT: doar schimbă Status din "Pending" în "Approved"
+                var member = await _db.GroupMembers.FirstOrDefaultAsync(gm =>
+                    gm.GroupId == group.Id && gm.UserId == notification.ActorUserId);
 
-                if (!isOwner && !isSiteAdmin && !isGroupAdmin) return Forbid();
-
-                var alreadyMember = await _db.GroupMembers
-                    .AnyAsync(gm => gm.GroupId == groupId && gm.UserId == notification.ActorUserId);
-
-                if (!alreadyMember)
+                if (member != null)
                 {
-                    _db.GroupMembers.Add(new GroupMember
-                    {
-                        GroupId = groupId,
-                        UserId = notification.ActorUserId,
-                        IsModerator = false
-                    });
+                    member.Status = RequestStatus.Accepted;
                 }
+                
             }
 
             await _db.SaveChangesAsync();

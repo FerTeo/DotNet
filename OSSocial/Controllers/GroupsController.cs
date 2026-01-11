@@ -11,6 +11,8 @@ namespace OSSocial.Controllers
     [Route("Groups")]
     public class GroupsController : Controller
     {
+
+        
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ApplicationDbContext db;
 
@@ -28,50 +30,34 @@ namespace OSSocial.Controllers
         [Authorize(Roles = "Admin, User, Editor")]
         public IActionResult Index()
         {
-            if (TempData.ContainsKey("message"))
-            {
-                ViewBag.message = TempData["message"];
-                ViewBag.Alert = TempData["messageType"];
-            }
+            var currentUserId = _userManager.GetUserId(User);
 
             SetAccessRights();
 
-            if (User.IsInRole("Admin"))
-            {
-                var groups = db.Groups
-                    .Include(g => g.Members)
-                    .Include(g => g.User)
-                    .ToList();
+            
+            var groups = db.Groups
+                .Include(g => g.Members)
+                .Include(g => g.User)
+                .ToList();
 
-                if (!groups.Any())
+            var membershipStatus = groups.ToDictionary(
+                g => g.Id,
+                g => new
                 {
-                    return NotFound();
-                }
-                else
-                {
-                    ViewBag.Groups = groups;
-                    return View();
-                }
-            }
-            else if (User.IsInRole("Editor") || User.IsInRole("User"))
-            {
-                var currentUserId = _userManager.GetUserId(User);
-                
-                var groups = db.Groups
-                    .Include(g => g.Members)
-                    .Include(g => g.User)
-                    .Where(g => g.UserId == currentUserId || g.Members.Any(m => m.UserId == currentUserId))
-                    .ToList();
-                
-                    ViewBag.Groups = groups;
-                    return View();
-            }
-            else
-            {
-                TempData["message"] = "Must be logged in to view groups...";
-                TempData["messageType"] = "alert-danger";
-                return RedirectToAction("Index", "Post");
-            }
+                    IsMember = db.GroupMembers.Any(m =>
+                        m.GroupId == g.Id &&
+                        m.UserId == currentUserId &&
+                        m.Status == RequestStatus.Accepted),
+                    HasPending = db.GroupMembers.Any(m =>
+                        m.GroupId == g.Id &&
+                        m.UserId == currentUserId &&
+                        m.Status == RequestStatus.Pending)
+                });
+
+            ViewBag.Groups = groups;
+            ViewBag.MembershipStatus = membershipStatus;
+            return View();
+            
         }
         
         [HttpGet("Explore")]
@@ -110,13 +96,25 @@ namespace OSSocial.Controllers
                 return RedirectToAction("Index", "Post");
             }
 
-            // Determine viewing rights for current user (don't redirect; render page with info)
+            // Determinam daca are acces sa vada grupul
             var currentUserId = User?.FindFirstValue(ClaimTypes.NameIdentifier);
             bool isAdmin = User?.IsInRole("Admin") == true;
             bool isOwner = group.UserId == currentUserId;
-            bool isMember = db.GroupMembers.Any(gm => gm.GroupId == group.Id && gm.UserId == currentUserId);
+            //Doar membrii acceptati nu cei pending
+            bool isMember = db.GroupMembers.Any(gm => 
+                gm.GroupId == group.Id && 
+                gm.UserId == currentUserId && 
+                gm.Status == RequestStatus.Accepted);
 
             bool canView = group.IsPublic || isAdmin || isOwner || isMember;
+
+            
+            if (!group.IsPublic && !canView)
+            {
+                TempData["message"] = "You don't have permission to view this group.";
+                TempData["messageType"] = "alert-danger";
+                return RedirectToAction("Index");
+            }
 
             // expose flags to the view so it can show a friendly message / hide controls when necessary
             ViewBag.CanView = canView;
@@ -124,10 +122,10 @@ namespace OSSocial.Controllers
             ViewBag.IsOwner = isOwner;
             ViewBag.EsteAdmin = isAdmin;
             
-            // pt a afisa toti membrii grupului
+            // pt a afisa toti membrii grupului (only ACCEPTED)
             var member = db.GroupMembers 
                 .Include(gm => gm.User)
-                .Where(gm => gm.GroupId == group.Id)
+                .Where(gm => gm.GroupId == group.Id && gm.Status == RequestStatus.Accepted)
                 .ToList();
             
             ViewBag.Members = member;
@@ -158,7 +156,7 @@ namespace OSSocial.Controllers
                 db.SaveChanges();
                 
                 // also need to add owner member entry
-                GroupMember groupMember = new GroupMember(_userManager.GetUserId(User), group.Id);
+                GroupMember groupMember = new GroupMember(_userManager.GetUserId(User), group.Id,RequestStatus.Accepted);
                 groupMember.IsModerator = true;
                 
                 db.GroupMembers.Add(groupMember);
@@ -179,7 +177,7 @@ namespace OSSocial.Controllers
         // poti da join unui grup doar daca esti logat
         [HttpPost("JoinGroup")]
         [Authorize(Roles =  "Admin, User, Editor")]
-        public IActionResult JoinGroup(int GroupId)
+        public async Task<IActionResult> JoinGroup(int GroupId)
         {
             var group = db.Groups.Find(GroupId);
             if (group == null)
@@ -189,10 +187,16 @@ namespace OSSocial.Controllers
                 return RedirectToAction("Explore");
             }
 
-            var currentUserId = _userManager.GetUserId(User);
+            
+            var currentUser = _userManager.GetUserAsync(User).Result;
+            if (currentUser == null)
+            {
+                return BadRequest();
+                
+            }
 
             // check if already a member
-            bool isAlreadyMember = db.GroupMembers.Any(gm => gm.GroupId == GroupId && gm.UserId == currentUserId);
+            bool isAlreadyMember = db.GroupMembers.Any(gm => gm.GroupId == GroupId && gm.UserId == currentUser.Id);
             if (isAlreadyMember)
             {
                 TempData["message"] = "You are already a member of this group.";
@@ -200,13 +204,41 @@ namespace OSSocial.Controllers
                 return RedirectToAction("GroupProfile", new { id = GroupId });
             }
 
-            GroupMember newMember = new GroupMember(currentUserId, group.Id);
-            db.GroupMembers.Add(newMember);
-            db.SaveChanges();
-
-            TempData["message"] = "You have joined the group!";
-            TempData["messageType"] = "alert-success";
-            return RedirectToAction("GroupProfile", new { id = GroupId });
+            if (group.IsPublic)
+            {
+                //dam join direct nu mai avem nevoie de confirmare de la admin
+                GroupMember newMember = new GroupMember(currentUser.Id.ToString(), group.Id,RequestStatus.Accepted);
+                db.GroupMembers.Add(newMember);
+                db.SaveChanges();
+               
+                TempData["message"] = "You have joined the group!";
+                TempData["messageType"] = "alert-success";
+                return RedirectToAction("GroupProfile", new { id = GroupId });
+            }
+            else
+            {
+                GroupMember newMember = new GroupMember(currentUser.Id.ToString(), group.Id,RequestStatus.Pending);
+                db.GroupMembers.Add(newMember);
+                
+                //grupul este privat deci trimitem notificare
+                var notification = new Notification
+                {
+                    UserId = group.UserId,
+                    ActorUserId = currentUser.Id.ToString(),
+                    Type = NotificationType.GroupRequest,
+                    ReferenceId = GroupId.ToString(),
+                    Message = currentUser.UserName + " to join " + group.Name,
+                    Date = DateTime.Now
+                };
+                
+                db.Notifications.Add(notification);
+                db.SaveChanges();
+                
+                TempData["message"] = "Join request sent! Waiting for owner approval...";
+                TempData["messageType"] = "alert-info";
+                return RedirectToAction("GroupProfile", new { id = GroupId });
+            }
+            
         }
 
         [HttpPost("LeaveGroup")]
