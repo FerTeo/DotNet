@@ -54,20 +54,6 @@ public class ProfilesController : Controller
         // lista propriu-zisa 
         ViewBag.UsersList = usersQuery.ToList(); 
 
-        // Calculăm totalul pentru paginare (dacă vei implementa paginarea mai jos)
-        int totalUsers = usersQuery.Count();
-        ViewBag.TotalUsers = totalUsers;
-
-        // Logica pentru URL-ul de paginare
-        if (!string.IsNullOrEmpty(search))
-        {
-            ViewBag.PaginationBaseUrl = "/Profiles/Index/?search=" + search + "&page=";
-        }
-        else
-        {
-            ViewBag.PaginationBaseUrl = "/Profiles/Index/?page=";
-        }
-
         return View();
     }
     
@@ -135,6 +121,7 @@ public class ProfilesController : Controller
 
         ViewBag.Roles = roles;
         ViewBag.UserCurent = currentUser;
+        ViewBag.IsCurrentUser = currentUser != null && currentUser.Id == targetUser.Id;
         ViewBag.FollowersCount = followersCount;
         ViewBag.FollowingCount = followingCount;
         ViewBag.IsFollowing = isFollowing;

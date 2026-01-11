@@ -34,30 +34,36 @@ namespace OSSocial.Controllers
 
             SetAccessRights();
 
-            
-            var groups = db.Groups
-                .Include(g => g.Members)
-                .Include(g => g.User)
-                .ToList();
-
-            var membershipStatus = groups.ToDictionary(
-                g => g.Id,
-                g => new
-                {
-                    IsMember = db.GroupMembers.Any(m =>
-                        m.GroupId == g.Id &&
-                        m.UserId == currentUserId &&
-                        m.Status == RequestStatus.Accepted),
-                    HasPending = db.GroupMembers.Any(m =>
-                        m.GroupId == g.Id &&
-                        m.UserId == currentUserId &&
-                        m.Status == RequestStatus.Pending)
-                });
-
-            ViewBag.Groups = groups;
-            ViewBag.MembershipStatus = membershipStatus;
-            return View();
-            
+            if (User.IsInRole("Admin"))
+            {
+                var groups = db.Groups
+                    .Include(g => g.Members)
+                    .Include(g => g.User)
+                    .ToList();
+                
+                ViewBag.Groups = groups;
+                return View();
+                
+            }
+            else if (User.IsInRole("Editor") || User.IsInRole("User"))
+            {
+                var currentUserId = _userManager.GetUserId(User);
+                
+                var groups = db.Groups
+                    .Include(g => g.Members)
+                    .Include(g => g.User)
+                    .Where(g => g.UserId == currentUserId || g.Members.Any(m => m.UserId == currentUserId))
+                    .ToList();
+                
+                    ViewBag.Groups = groups;
+                    return View();
+            }
+            else
+            {
+                TempData["message"] = "Must be logged in to view groups...";
+                TempData["messageType"] = "alert-danger";
+                return RedirectToAction("Index", "Post");
+            }
         }
         
         [HttpGet("Explore")]
@@ -125,7 +131,7 @@ namespace OSSocial.Controllers
             // pt a afisa toti membrii grupului (only ACCEPTED)
             var member = db.GroupMembers 
                 .Include(gm => gm.User)
-                .Where(gm => gm.GroupId == group.Id && gm.Status == RequestStatus.Accepted)
+                .Where(gm => gm.GroupId == group.Id && gm.UserId != _userManager.GetUserId(User))
                 .ToList();
             
             ViewBag.Members = member;
