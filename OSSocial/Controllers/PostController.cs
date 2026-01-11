@@ -63,7 +63,7 @@ namespace OSSocial.Controllers
                     .Include(p => p.Reactions) // numar like-uri
                     .Where(p => p.User.IsPrivate == false &&
                                 !p.Reactions.Any(r => r.UserId == _userManager.GetUserId(User)) &&
-                                p.UserId != _userManager.GetUserId(User)) // doar postarile userilor publici la care NU s-a dat like inca
+                                p.UserId  != _userManager.GetUserId(User)) // doar postarile userilor publici la care NU s-a dat like inca
                     .OrderByDescending(p => p.Time) // cele mai noi postari prima data
                     .ToList();
                 ViewBag.Posts = posts;
@@ -423,6 +423,19 @@ namespace OSSocial.Controllers
             if (postare.UserId != currentUserId && !User.IsInRole("Admin"))
             {
                 return Forbid();
+            }
+            
+            var comments = _db.Comments.Where(c => c.PostId == id).ToList();
+            if (comments.Any())
+            {
+                _db.Comments.RemoveRange(comments);
+            }
+
+            // pt reactii la fel ca la comentarii
+            var reactions = _db.Reactions.Where(r => r.PostId == id).ToList();
+            if (reactions.Any())
+            {
+                _db.Reactions.RemoveRange(reactions);
             }
             
             _db.Posts.Remove(postare);
