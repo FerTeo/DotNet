@@ -10,14 +10,15 @@ using ContentResult = OSSocial.Services.ContentResult;
 namespace OSSocial.Controllers
 {
     [Route("Comments")]
-    public class CommentsController(
+    public class CommentsController
+    (
         ApplicationDbContext context,
         UserManager<ApplicationUser> userManager,
         RoleManager<IdentityRole> roleManager,
         IContentAnalysisService contentService) : Controller
 
     {
-        private readonly ApplicationDbContext db = context;
+        private readonly ApplicationDbContext _db = context;
         private readonly UserManager<ApplicationUser> _userManager = userManager;
         private readonly RoleManager<IdentityRole> _roleManager = roleManager;
         private readonly IContentAnalysisService _contentService = contentService;
@@ -66,8 +67,8 @@ namespace OSSocial.Controllers
                 }
             }
 
-            db.Comments.Add(comentariu);
-            db.SaveChanges();
+            _db.Comments.Add(comentariu);
+            _db.SaveChanges();
             return Redirect("/Post/Details/" + comentariu.PostId); // afiseaza postarea dupa adaugarea comentariului
         }
 
@@ -77,8 +78,7 @@ namespace OSSocial.Controllers
         [Authorize(Roles = "User,Editor,Admin")]
         public IActionResult Delete(int id, string? returnUrl)
         {
-            // Load comment including its Post to safely access post owner and postId
-            Comment? comentariu = db.Comments
+            Comment? comentariu = _db.Comments
                 .Include(c => c.Post)
                 .FirstOrDefault(c => c.Id == id);
 
@@ -99,8 +99,8 @@ namespace OSSocial.Controllers
                 || User.IsInRole("Admin")
                 || postOwnerId == currentUserId)
             {
-                db.Comments.Remove(comentariu);
-                db.SaveChanges();
+                _db.Comments.Remove(comentariu);
+                _db.SaveChanges();
 
                 // Prefer returning to a provided local returnUrl (the view includes one), otherwise go to Post/Details
                 if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
@@ -124,7 +124,7 @@ namespace OSSocial.Controllers
         [Authorize(Roles = "User,Editor,Admin")]
         public IActionResult Edit(int id)
         {
-            var comentariu = db.Comments
+            var comentariu = _db.Comments
                 .Include(c => c.Post)
                 .FirstOrDefault(c => c.Id == id);
 
@@ -147,7 +147,7 @@ namespace OSSocial.Controllers
         [Authorize(Roles = "User,Editor,Admin")]
         public IActionResult Edit(int id, Comment comentariu)
         {
-            Comment? comentariuDeModificat = db.Comments
+            Comment? comentariuDeModificat = _db.Comments
                 .Include(c => c.Post)
                 .FirstOrDefault(c => c.Id == id);
 
@@ -177,7 +177,7 @@ namespace OSSocial.Controllers
             }
 
             comentariuDeModificat.Content = comentariu.Content;
-            db.SaveChanges();
+            _db.SaveChanges();
 
             var redirect = Url.Action("Details", "Post", new { id = comentariuDeModificat.PostId }) + "#comment-" + comentariuDeModificat.Id;
             return Redirect(redirect);

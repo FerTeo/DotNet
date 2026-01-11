@@ -8,17 +8,30 @@ using Microsoft.EntityFrameworkCore;
 namespace OSSocial.Controllers
 {
 
-    public class ReactionController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager) : Controller
+    public class ReactionController
+    (
+        ApplicationDbContext context,
+        UserManager<ApplicationUser> userManager,
+        RoleManager<IdentityRole> roleManager
+    ) : Controller
     {
-        private readonly ApplicationDbContext db = context;
+        private readonly ApplicationDbContext _db = context;
         private readonly UserManager<ApplicationUser> _userManager = userManager;
         private readonly RoleManager<IdentityRole> _roleManager = roleManager;
 
 
-        //aflarea nr de reactii ale unei postari
+        /// <summary>
+        ///  Aflarea numarului de reactii ale unei postari
+        /// </summary>
+        /// <param name="postId">
+        ///  Postarea la care vrem sa aflam numarul de like-uri
+        /// </param>
+        /// <returns>
+        /// Returneaza numarul de reactii
+        /// </returns>
         public IActionResult GetCounts(int postId)
         {
-            var list = db.Reactions
+            var list = _db.Reactions
                 .Where(r => r.PostId == postId)
                 .ToList();
 
@@ -26,59 +39,49 @@ namespace OSSocial.Controllers
             return Ok(numberLikes);
         }
 
-        [HttpPost]
-        public IActionResult NewReaction(Reaction reaction)
-        {
-            reaction.DateCreated = DateTime.Now;
-            reaction.UserId = _userManager.GetUserId(User);
-            
-            //aceste proprietati nu sunt trimise in formular
-            ModelState.Remove(nameof(reaction.Post));
-            ModelState.Remove(nameof(reaction.User));
-            ModelState.Remove(nameof(reaction.UserId));
-
-            if (ModelState.IsValid)
-            {
-                db.Reactions.Add(reaction);
-                db.SaveChanges();
-                
-            }
-            return Redirect("/Post/Details/" + reaction.PostId);
-        }
-
+        
+        
+        /// <summary>
+        ///  Crearea sau stergerea unei reactii noi.
+        /// </summary>
+        /// <param name="postId">
+        ///  Postarea la care se reactioneaza
+        /// </param>
+        /// <returns></returns>
         [HttpPost ]
         public IActionResult Toggle(int postId)
         {
-            var userId = _userManager.GetUserId(User);
-            if (string.IsNullOrEmpty(userId))
+            var currentUserId = _userManager.GetUserId(User);
+            if (currentUserId==null)
             {
-                return Unauthorized();
+                return RedirectToAction("Details", "Post", new { id = postId });
             }
+            
+            //verificam daca reactia exista
+            var existingReaction = _db.Reactions
+                .FirstOrDefault(r => r.PostId == postId && r.UserId == currentUserId);
 
-            var existingReaction = db.Reactions
-                .FirstOrDefault(r => r.PostId == postId && r.UserId == userId);
 
-
-            //daca nu exista creeam o noua reacti
+            //daca nu exista creeam o noua reactie
             if (existingReaction == null)
             {
                 var reaction = new Reaction
                 {
                     PostId = postId,
-                    UserId = userId,
+                    UserId = currentUserId,
                     DateCreated = DateTime.Now,
                 };
 
-                db.Reactions.Add(reaction);
+                _db.Reactions.Add(reaction);
 
-            }
+            }//daca exista stergem reactia existenta
             else
             {
-                db.Reactions.Remove(existingReaction);
+                _db.Reactions.Remove(existingReaction);
 
             }
 
-            db.SaveChanges();
+            _db.SaveChanges();
 
             return RedirectToAction("Details","Post", new { id = postId });
         }
