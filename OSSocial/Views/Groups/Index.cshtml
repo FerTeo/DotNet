@@ -4,7 +4,7 @@
 @if (TempData["message"] != null)
 {
     <div class="alert @ViewBag.Alert p-3 rounded-3 text-center mb-5">
-        @ViewBag.Message
+        @TempData["message"]
     </div>
 }
 
@@ -13,34 +13,54 @@
 <a asp-controller="Groups" asp-action="Create" class="btn btn-success rounded-pill mb-5">
     <i class="bi bi-plus"></i> Create a new group
 </a>
-
 <div class="row">
-
-    @foreach (var group in ViewBag.Groups)
+    @foreach (var group in ViewBag.Groups ?? new List<OSSocial.Models.Group>())
     {
+        var status = ViewBag.MembershipStatus?[group.Id];
+        var isMember = status?.IsMember ?? false;
+        var hasPending = status?.HasPending ?? false;
+        var isOwner = group.UserId == ViewBag.UserCurent;
+
         <div class="col-4 mb-4">
-
             <div class="card">
-
                 <div class="card-body">
-                    
-                    <h5 class="card-title" name="Name">@group.Name</h5>
+                    <h5 class="card-title">@group.Name</h5>
 
-                    @if (ViewBag.IsAdmin)
+                    @if (!group.IsPublic)
                     {
-                        <div>
-                            <i class="bi bi-person"> Owned by: </i> 
-                            @(group.User?.UserName ?? "Unknown Owner")
-                        </div>
-                        
-                    }        
+                        <span class="badge bg-danger mb-2">Private</span>
+                    }
+
+                    @if (isOwner)
+                    {
+                        <span class="badge bg-primary mb-2">Owner</span>
+                    }
+
                     <br />
 
-                    <a asp-controller="Groups" asp-action="GroupProfile" asp-route-id="@group.Id" class="btn btn-dark">Show group profile</a>
+                    <a asp-controller="Groups" asp-action="GroupProfile" asp-route-id="@group.Id" 
+                       class="btn btn-dark btn-sm">
+                        Show group profile
+                    </a>
 
+                    @* Show Join button only if: not owner, not member, no pending request *@
+                    @if (!isOwner && !isMember && !hasPending)
+                    {
+                        <form asp-controller="Groups" asp-action="JoinGroup" method="post" style="display:inline;">
+                            <input type="hidden" name="GroupId" value="@group.Id" />
+                            <button type="submit" class="btn btn-success btn-sm">Join</button>
+                        </form>
+                    }
+                    else if (hasPending && !isOwner)
+                    {
+                        <span class="badge bg-warning">Pending approval</span>
+                    }
+                    else if (isMember && !isOwner)
+                    {
+                        <span class="badge bg-info">Member</span>
+                    }
                 </div>
             </div>
         </div>
     }
-
 </div>
