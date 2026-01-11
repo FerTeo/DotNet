@@ -38,7 +38,7 @@ public class ProfilesController
         // filtrez dupa numele de utilizator daca s-a dat un termen de cautare
         if (!string.IsNullOrEmpty(search))
         {
-            usersQuery = usersQuery.Where(u => u.UserName.Contains(search));
+            usersQuery = usersQuery.Where(u => u.UserName!=null && u.UserName.Contains(search));
         }
 
         usersQuery = usersQuery.OrderBy(u => u.UserName);

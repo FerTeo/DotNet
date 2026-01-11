@@ -10,7 +10,7 @@
     var showFollowButton = ViewBag.ShowFollowButton as bool? ?? false;
     var followersCount = ViewBag.FollowersCount as int? ?? 0;
     var followingCount = ViewBag.FollowingCount as int? ?? 0;
-    var postCount = Model.Posts.Count as int? ?? 0;
+    var postCount = Model?.Posts?.Count ?? 0;
     var showPosts = ViewBag.ShowPosts as bool? ?? false;
 }
 
@@ -28,7 +28,7 @@
 
 <div class="profile-card">
     <div class="card-body d-flex gap-4 align-items-center">
-        @if (!string.IsNullOrEmpty(Model.ProfileImageUrl))
+        @if (!string.IsNullOrEmpty(Model?.ProfileImageUrl))
         {
             <div class="avatar-circle" aria-hidden="true">
                 <img src="@Url.Content(Model.ProfileImageUrl)" alt="Profile image" class="avatar-img" />
@@ -40,7 +40,7 @@
         }
 
         <div class="flex-grow-1">
-            <h3 class="mb-1">@Model.DisplayName</h3>
+            <h3 class="mb-1">@Model?.DisplayName</h3>
 
             <div class="mb-3 d-flex gap-3 align-items-center">
                 <div><span class="meta-label">Followers: </span> <strong>@followersCount</strong></div>
@@ -49,11 +49,11 @@
             </div>
 
             <div class="mb-2">
-                <div><span class="meta-label">Username: </span> @(!string.IsNullOrEmpty(Model.UserName) ? Model.UserName : "—")</div>
+                <div><span class="meta-label">Username: </span> @(!string.IsNullOrEmpty(Model?.UserName) ? Model.UserName : "—")</div>
             </div>
 
             <div class="mb-2">
-                <div><span class="meta-label">Bio: </span>@(!string.IsNullOrEmpty(Model.Bio) ? Model.Bio : "—")</div>
+                <div><span class="meta-label">Bio: </span>@(!string.IsNullOrEmpty(Model?.Bio) ? Model.Bio : "—")</div>
             </div>
         </div>
     </div>
@@ -92,7 +92,7 @@
     <div class="mt-4">
         <h4 class="text-center mb-4">Posts</h4>
 
-        @if (Model.Posts != null && Model.Posts.Any())
+        @if (Model?.Posts != null && Model.Posts.Any())
         {
             // Le ordonam descrescator dupa timp (cele mai noi primele)
             @foreach (var postare in Model.Posts.OrderByDescending(p => p.Time))
