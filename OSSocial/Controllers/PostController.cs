@@ -44,17 +44,30 @@ namespace OSSocial.Controllers
         public IActionResult Explore()
         {
             // practic functie de index dar in social media terms
-            var posts = _db.Posts
-                .Include(p => p.User) // nume autor
-                .Include(p => p.Comments) // nr comentarii
-                .Include(p => p.Reactions) // numar like-uri
-                .Where(p => p.User !=null && p.User.IsPrivate == false &&
-                            !p.Reactions.Any(r => r.UserId == _userManager.GetUserId(User)) &&
-                            p.UserId != _userManager.GetUserId(User)) // doar postarile userilor publici la care NU s-a dat like inca
-                .OrderByDescending(p => p.Time) // cele mai noi postari prima data
-                .ToList();
+            if (User.IsInRole("Admin"))
+            {
+                var posts = _db.Posts
+                    .Include(p => p.User) // nume autor
+                    .Include(p => p.Comments) // nr comentarii
+                    .Include(p => p.Reactions) // numar like-uri
+                    .OrderByDescending(p => p.Time) // cele mai noi postari prima data
+                    .ToList();
+                ViewBag.Posts = posts;
+            }
+            else
+            {
+                var posts = _db.Posts
+                    .Include(p => p.User) // nume autor
+                    .Include(p => p.Comments) // nr comentarii
+                    .Include(p => p.Reactions) // numar like-uri
+                    .Where(p => p.User.IsPrivate == false &&
+                                !p.Reactions.Any(r => r.UserId == _userManager.GetUserId(User)) &&
+                                p.UserId  != _userManager.GetUserId(User)) // doar postarile userilor publici la care NU s-a dat like inca
+                    .OrderByDescending(p => p.Time) // cele mai noi postari prima data
+                    .ToList();
+                ViewBag.Posts = posts;
+            }
             
-            ViewBag.Posts = posts;
             
             return View();
         }
@@ -410,6 +423,20 @@ namespace OSSocial.Controllers
             if (postare.UserId != currentUserId && !User.IsInRole("Admin"))
             {
                 return Forbid();
+            }
+            
+            // remove all comments associated with the post
+            var comments = _db.Comments.Where(c => c.PostId == id).ToList();
+            if (comments.Any())
+            {
+                _db.Comments.RemoveRange(comments);
+            }
+
+            // pt reactii la fel ca la comentarii
+            var reactions = _db.Reactions.Where(r => r.PostId == id).ToList();
+            if (reactions.Any())
+            {
+                _db.Reactions.RemoveRange(reactions);
             }
             
             _db.Posts.Remove(postare);
