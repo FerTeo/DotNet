@@ -50,12 +50,12 @@ public class FollowController : Controller
         {
             if (followRequest.Status == FollowStatus.Accepted)
             {
-                TempData["Message"] = "You are already following this user.";
+                TempData["Message_Profile"] = "You are already following this user.";
                 return RedirectToAction("Show", "Profiles", new { username = targetUser.UserName });
             }
             if (followRequest.Status == FollowStatus.Pending)
             {
-                TempData["Message"] = "Follow request is pending.";
+                TempData["Message_Profile"] = "Follow request is pending.";
                 return RedirectToAction("Show", "Profiles", new { username = targetUser.UserName });
             }
         }
@@ -78,12 +78,29 @@ public class FollowController : Controller
             follow.RequestedAt = DateTime.Now;
         }
 
+        //cream notificarea
+        if (targetUser.IsPrivate == true)
+        {
+            var notification = new Notification
+            {
+                UserId = targetUser.Id,
+                ActorUserId = currentUser.Id,
+                Type = NotificationType.Follow,
+                ReferenceId = null,
+                Message = currentUser.UserName + " wants to follow.",
+                Date = DateTime.Now,
+            };
+            
+            _db.Notifications.Add(notification);
+            await _db.SaveChangesAsync();
+        }
+
         _db.Follows.Add(follow);
 
         await _db.SaveChangesAsync();
         
         // setam un mesaj simplu si redirectionam inapoi la profil
-        TempData["Message"] = follow.Status == FollowStatus.Accepted ? "You are now following this user." : "Follow request sent.";
+        TempData["Message_Profile"] = follow.Status == FollowStatus.Accepted ? "You are now following this user." : "Follow request sent.";
         return RedirectToAction("Show", "Profiles", new { username = targetUser.UserName });
 
     }
@@ -128,64 +145,5 @@ public class FollowController : Controller
         await _db.SaveChangesAsync();
         TempData["Message"] = "Unfollowed.";
         return RedirectToAction("Show", "Profiles", new { username = targetUser.UserName });
-    }
-
-    [HttpPost]
-    public async Task<IActionResult> Accept(int followId, bool accept)
-    {
-        var currentUser = await _userManager.GetUserAsync(User);
-        if (currentUser == null)
-        {
-            TempData["Error"] = "You must be logged in.";
-            return RedirectToAction("PendingRequests");
-        }
-
-        //cautam cererea pending catre utilizator
-        var follow = await _db.Follows.FirstOrDefaultAsync(x =>
-            x.Id == followId &&
-            x.FolloweeId == currentUser.Id &&
-            x.Status == FollowStatus.Pending);
-
-        if (follow == null)
-        {
-            TempData["Error"] = "Request not found.";
-            return RedirectToAction("PendingRequests");
-        }
-
-        if (accept)
-        {
-            follow.Status = FollowStatus.Accepted;
-            follow.RespondedAt = DateTime.Now;
-            await _db.SaveChangesAsync();
-            TempData["Message"] = "Follow request accepted.";
-        }
-        else
-        {
-            // daca respinge, stergem cererea
-            _db.Follows.Remove(follow);
-            await _db.SaveChangesAsync();
-            TempData["Message"] = "Follow request rejected.";
-        }
-
-        // notificatile - TODO
-        
-        
-        return RedirectToAction("PendingRequests");
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> PendingRequests()
-    {
-        var currentUser = await _userManager.GetUserAsync(User);
-        if (currentUser == null)
-            return BadRequest();
-
-        //cautam toate cererile pending catre utilizator
-        var pendingFollows = await _db.Follows
-            .Include(f => f.Follower)
-            .Where(f => f.FolloweeId == currentUser.Id && f.Status == FollowStatus.Pending)
-            .ToListAsync();
-
-        return View(model: pendingFollows);
     }
 }
