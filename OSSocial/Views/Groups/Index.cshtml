@@ -10,9 +10,6 @@
 
 <br />
 
-<a asp-controller="Groups" asp-action="Create" class="btn btn-success rounded-pill mb-5">
-    <i class="bi bi-plus"></i> Create a new group
-</a>
 <div class="row">
     @foreach (var group in ViewBag.Groups ?? new List<OSSocial.Models.Group>())
     {
@@ -64,3 +61,22 @@
         </div>
     }
 </div>
+
+<a asp-controller="Groups" asp-action="Create"
+   class="btn btn-success shadow-lg"
+   title="Create a new group"
+   style="
+       position: fixed; 
+       bottom: 100px; 
+       left: 50%; 
+       transform: translateX(-50%); 
+       width: 60px; 
+       height: 60px; 
+       border-radius: 50%; 
+       display: flex; 
+       align-items: center; 
+       justify-content: center; 
+       z-index: 1000;">
+    
+    <i class="bi bi-plus-lg" style="font-size: 1.8rem;">+</i>
+</a>

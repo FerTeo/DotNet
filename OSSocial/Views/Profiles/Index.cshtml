@@ -1,43 +1,81 @@
 @{
-    ViewBag.Title = "title";
+    ViewBag.Title = "User Search";
     Layout = "_Layout";
 }
 
-<h2>Afisarea utilizatorilor</h2>
-@if(ViewBag.Message != null){
-    <h2 class="p-3 rounded-3 text-center mb-5 alert @ViewBag.Alert">@ViewBag.Message</h2>
-}
+<div class="container py-4">
 
-@* Search engine yay *@
-
-<form method="GET">
-    <div class="input-group mb-3">
-        <input type="text" class="form-control" placeholder="Search by username" name="search"
-               value="@ViewBag.SearchString">
-        <button class="btn btn-outline-success" type="submit">Search</button>
+    @* --- Header Section --- *@
+    <div class="text-center mb-5">
+        <h2 class="fw-bold">Afisarea utilizatorilor</h2>
     </div>
-</form>
 
-@if (ViewBag.UsersList.Count == 0)
-{
-    <h3>No users found... maybe try another username?</h3>
-}
-else
-{
-    @foreach (var user in ViewBag.UsersList)
+    @* --- Alert Section --- *@
+    @if (ViewBag.Message != null)
     {
-        <div style="padding: 10px; margin-bottom: 20px;">
-
-            <partial name="UserInfo" model="user"></partial>
-
-            <a class="btn btn-success" asp-controller="Profiles" asp-action="Show" asp-route-username="@user.UserName">Show user profile</a>
-
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="alert @ViewBag.Alert text-center shadow-sm" role="alert">
+                    @ViewBag.Message
+                </div>
+            </div>
         </div>
-
-        <br />
-        <br />
     }
 
-    <br />
-}
+    @* --- Search Engine --- *@
+    <div class="row justify-content-center mb-5">
+        <div class="col-md-8">
+            <form method="GET">
+                <div class="input-group input-group-lg shadow-sm">
+                    <input type="text"
+                           class="form-control"
+                           placeholder="Search by username..."
+                           name="search"
+                           value="@ViewBag.SearchString">
+                    <button class="btn btn-outline-success" type="submit">Search</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
+    @* --- Results Section --- *@
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+
+            @if (ViewBag.UsersList.Count == 0)
+            {
+                <div class="text-center text-muted py-5">
+                    <h3 class="fw-light">No users found...</h3>
+                    <p>Maybe try another username?</p>
+                </div>
+            }
+            else
+            {
+                @foreach (var user in ViewBag.UsersList)
+                {
+                    <div class="card mb-3 shadow-sm border-0">
+                        <div class="card-body d-flex align-items-center justify-content-between flex-wrap gap-3">
+
+                            @* User Info Partial *@
+                            <div class="flex-grow-1">
+                                <partial name="UserInfo" model="user"></partial>
+                            </div>
+
+                            @* Action Button *@
+                            <div>
+                                <a class="btn btn-success px-4 rounded-pill"
+                                   asp-controller="Profiles"
+                                   asp-action="Show"
+                                   asp-route-username="@user.UserName">
+                                   Show user profile
+                                </a>
+                            </div>
+
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
+</div>
