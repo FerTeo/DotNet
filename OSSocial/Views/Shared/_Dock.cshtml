@@ -1,47 +1,69 @@
 @{
 
-    bool userLogat = false;
+    bool userLogat = User?.Identity?.IsAuthenticated == true;
     var settingsUrl = Url.Page("/Account/Login", new { area = "Identity" });
 
-    if (User?.Identity?.IsAuthenticated ?? false)
+    if (userLogat)
     {
-        userLogat = true;
         settingsUrl = Url.Page("/Account/Manage/Index", new { area = "Identity" });
     }
 
     // detectam controllerul curent pentru a vedea ce applicatie e activa
-    var currentController = (ViewContext.RouteData.Values["controller"] as string ?? string.Empty);
-    var currentAction = (ViewContext.RouteData.Values["action"] as string ?? string.Empty);
+    var currentController = (ViewContext.RouteData.Values["controller"] as string ?? string.Empty).ToLowerInvariant();
+    var currentAction = (ViewContext.RouteData.Values["action"] as string ?? string.Empty).ToLowerInvariant();
     var currentArea = (ViewContext.RouteData.Values["area"] as string ?? string.Empty).ToLowerInvariant();
-    
 
-    var isPhotosApp = currentController?.ToLowerInvariant() == "post"; 
-    var isProfilesApp = currentController?.ToLowerInvariant() == "profiles" || currentAction?.ToLowerInvariant() == "show";
-    var isSettingsApp = currentArea?.ToLowerInvariant() == "identity";
-    var isNotification = currentController?.ToLowerInvariant() == "notifications";
-    var isGroupsApp = currentController?.ToLowerInvariant() == "groups";
-                            
+    // if the route includes a username param (Profiles/Show), capture it
+    var routeUsername = (ViewContext.RouteData.Values["username"] as string) ?? string.Empty;
+    var currentUserName = User?.Identity?.Name ?? string.Empty;
+
+    // are we viewing the logged-in user's own profile?
+    var viewingOwnProfile = currentController == "profiles" 
+                            && !string.IsNullOrEmpty(routeUsername) 
+                            && string.Equals(routeUsername, currentUserName, System.StringComparison.OrdinalIgnoreCase);
+
+    // photos app is active only when controller is Post (don't mark active when viewing own profile)
+    var isPhotosApp = currentController == "post";
+
+    // profiles app is active when controller is Profiles (but if we're viewing our own profile we treat that as 'home' below)
+    var isProfilesApp = currentController == "profiles" && !viewingOwnProfile;
+    var isSettingsApp = currentArea == "identity";
+    var isNotification = currentController == "notifications";
+    var isGroupsApp = currentController == "groups";
+
+    // compute home URL: if logged in, go to user's profile (Profiles/Show), otherwise go to Post/Explore
+    string homeUrl = Url.Action("Explore", "Post");
+    bool isHomeApp = false;
+    if (userLogat && !string.IsNullOrEmpty(currentUserName))
+    {
+        homeUrl = Url.Action("Show", "Profiles", new { username = currentUserName });
+        // home is active when viewing own profile
+        isHomeApp = viewingOwnProfile;
+    }
+    else
+    {
+        homeUrl = Url.Action("Explore", "Post");
+        isHomeApp = currentController == "post";
+    }
+
 }
 <nav class="navbar navbar-light bg-white border-top fixed-bottom" role="navigation" aria-label="Dock navigation">
     <div class="container d-flex justify-content-center">
         <ul class="nav">
-            <li class="nav-item mx-2">
-                <a class="nav-link text-center" asp-controller="Home" asp-action="Index" title="Home" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Home" aria-label="Home">
-                    <img src="@Url.Content("~/assets/icons/house.svg")" alt="Home" width="36" height="36" />
-                </a>
-            </li>
-                
-            <li class="nav-item mx-2">
-                <a class="nav-link text-center" asp-controller="Groups" asp-action="Explore" title="Explore" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Explore" aria-label="Explore">
-                    <img src="@Url.Content("~/assets/icons/search-heart.svg")" alt="Groups" width="36" height="36" />
-                </a>
-            </li>
-                
-            <li class="nav-item mx-2">
-                <a class="nav-link text-center @(isGroupsApp ? "active-app" : "")" asp-controller="Groups" asp-action="" title="Groups" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Groups" aria-label="Groups">
-                    <img src="@Url.Content("~/assets/icons/folder.svg")" alt="Home" width="36" height="36" />
-                </a>
-            </li>
+            @if (userLogat)
+            {
+                <li class="nav-item mx-2">
+                    <a class="nav-link text-center @(isHomeApp ? "active-app" : "")" href="@homeUrl" title="Home" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Home" aria-label="Home">
+                        <img src="@Url.Content("~/assets/icons/person-video2.svg")" alt="Home" width="36" height="36" />
+                    </a>
+                </li>
+
+                <li class="nav-item mx-2">
+                    <a class="nav-link text-center @(isGroupsApp ? "active-app" : "")" asp-controller="Groups" asp-action="" title="Groups" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Groups" aria-label="Groups">
+                        <img src="@Url.Content("~/assets/icons/folder.svg")" alt="Groups" width="36" height="36" />
+                    </a>
+                </li>
+            }
 
             <li class="nav-item mx-2">
                 <a class="nav-link text-center @(isPhotosApp ? "active-app" : "")" asp-controller="Post" asp-action="Explore" title="Pictos" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Pictos" aria-label="Pictos">  @*scriam pictures si dupa m-am gandit la un joc (expedition 33) si am lasat pictos*@
@@ -54,14 +76,15 @@
                     <img src="@Url.Content("~/assets/icons/people-fill.svg")" alt="Users" width="36" height="36"/>
                 </a>
             </li>
-                
+
+
                 
             <li class="nav-item mx-2">
                 <a class="nav-link text-center @(isSettingsApp? "active-app" : "")" href="@settingsUrl" title="Settings" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Settings" aria-label="Settings">
                     <img src="@Url.Content("~/assets/icons/gear.svg")" alt="Settings" width="36" height="36"/>
                 </a>
             </li>
-                
+
             @if (userLogat)
             {
                 <li class="nav-item mx-2">
@@ -69,15 +92,15 @@
                         <img src="@Url.Content("~/assets/icons/bell.svg")" alt="bell" width="36" height="36"/>
                     </a>
                 </li>
-                
+
                 <li class="nav-item mx-2">
-                    <form  class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                    <form  class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Explore", "Post", new { area = "" })">
                         <button type="submit" class="nav-link text-center" title="Logout" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Logout" aria-label="Settings">
                             <img src="@Url.Content("~/assets/icons/box-arrow-left.svg")" alt="Logout" width="36" height="36"/>
                         </button>
                     </form>
                 </li>
-                
+
             }
 
         </ul>

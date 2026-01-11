@@ -10,7 +10,7 @@ using ContentResult = OSSocial.Services.ContentResult;
 
 namespace OSSocial.Controllers
 {
-    [Route("Post")]
+    //[Route("Post")]
     public class PostController 
     (
         ApplicationDbContext context,
