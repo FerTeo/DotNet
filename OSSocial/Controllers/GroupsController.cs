@@ -47,8 +47,7 @@ namespace OSSocial.Controllers
             }
             else if (User.IsInRole("Editor") || User.IsInRole("User"))
             {
-                var currentUserId = _userManager.GetUserId(User);
-                
+
                 var groups = db.Groups
                     .Include(g => g.Members)
                     .Include(g => g.User)
@@ -193,12 +192,13 @@ namespace OSSocial.Controllers
                 return RedirectToAction("Explore");
             }
 
-            
+
             var currentUser = _userManager.GetUserAsync(User).Result;
             if (currentUser == null)
             {
                 return BadRequest();
                 
+
             }
 
             // check if already a member
@@ -217,6 +217,7 @@ namespace OSSocial.Controllers
                 db.GroupMembers.Add(newMember);
                 db.SaveChanges();
                
+
                 TempData["message"] = "You have joined the group!";
                 TempData["messageType"] = "alert-success";
                 return RedirectToAction("GroupProfile", new { id = GroupId });
@@ -225,7 +226,7 @@ namespace OSSocial.Controllers
             {
                 GroupMember newMember = new GroupMember(currentUser.Id.ToString(), group.Id,RequestStatus.Pending);
                 db.GroupMembers.Add(newMember);
-                
+
                 //grupul este privat deci trimitem notificare
                 var notification = new Notification
                 {
@@ -236,10 +237,10 @@ namespace OSSocial.Controllers
                     Message = currentUser.UserName + " to join " + group.Name,
                     Date = DateTime.Now
                 };
-                
+
                 db.Notifications.Add(notification);
                 db.SaveChanges();
-                
+
                 TempData["message"] = "Join request sent! Waiting for owner approval...";
                 TempData["messageType"] = "alert-info";
                 return RedirectToAction("GroupProfile", new { id = GroupId });
