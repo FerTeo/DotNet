@@ -425,6 +425,7 @@ namespace OSSocial.Controllers
                 return Forbid();
             }
             
+            // remove all comments associated with the post
             var comments = _db.Comments.Where(c => c.PostId == id).ToList();
             if (comments.Any())
             {
