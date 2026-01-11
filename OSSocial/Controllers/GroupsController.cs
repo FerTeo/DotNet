@@ -121,7 +121,7 @@ namespace OSSocial.Controllers
             // pt a afisa toti membrii grupului
             var member = db.GroupMembers 
                 .Include(gm => gm.User)
-                .Where(gm => gm.GroupId == group.Id)
+                .Where(gm => gm.GroupId == group.Id && gm.UserId != _userManager.GetUserId(User))
                 .ToList();
             
             ViewBag.Members = member;

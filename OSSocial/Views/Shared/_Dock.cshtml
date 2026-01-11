@@ -18,6 +18,7 @@
     var isPhotosApp = currentController?.ToLowerInvariant() == "post"; 
     var isProfilesApp = currentController?.ToLowerInvariant() == "profiles" || currentAction?.ToLowerInvariant() == "show";
     var isSettingsApp = currentArea?.ToLowerInvariant() == "identity";
+    var isGroupsApp = currentController?.ToLowerInvariant() == "groups";
                             
 }
 <nav class="navbar navbar-light bg-white border-top fixed-bottom" role="navigation" aria-label="Dock navigation">
@@ -36,13 +37,13 @@
             </li>
                 
             <li class="nav-item mx-2">
-                <a class="nav-link text-center" asp-controller="Groups" asp-action="" title="Groups" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Groups" aria-label="Groups">
+                <a class="nav-link text-center @(isGroupsApp ? "active-app" : "")" asp-controller="Groups" asp-action="" title="Groups" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Groups" aria-label="Groups">
                     <img src="@Url.Content("~/assets/icons/folder.svg")" alt="Home" width="36" height="36" />
                 </a>
             </li>
 
             <li class="nav-item mx-2">
-                <a class="nav-link text-center @(isPhotosApp ? "active-app" : "")" asp-controller="Post" asp-action="Feed" title="Feed" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Feed" aria-label="Feed">
+                <a class="nav-link text-center @(isPhotosApp ? "active-app" : "")" asp-controller="Post" asp-action="Explore" title="Pictos" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Pictos" aria-label="Pictos">  @*scriam pictures si dupa m-am gandit la un joc (expedition 33) si am lasat pictos*@
                     <img src="@Url.Content("~/assets/icons/images.svg")" alt="Feed" width="36" height="36"/>
                 </a>
             </li>

@@ -121,6 +121,7 @@ public class ProfilesController : Controller
 
         ViewBag.Roles = roles;
         ViewBag.UserCurent = currentUser;
+        ViewBag.IsCurrentUser = currentUser != null && currentUser.Id == targetUser.Id;
         ViewBag.FollowersCount = followersCount;
         ViewBag.FollowingCount = followingCount;
         ViewBag.IsFollowing = isFollowing;
