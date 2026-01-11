@@ -2,6 +2,12 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace OSSocial.Models
 {
+
+    public enum RequestStatus
+    {
+        Pending =0,
+        Accepted =1
+    }
     public class GroupMember
     {
         // tabelul asociativ!!
@@ -17,6 +23,8 @@ namespace OSSocial.Models
         
         public virtual Group? Group { get; set; }
         
+        public RequestStatus Status { get; set; } = RequestStatus.Accepted;
+        
         public DateTime JoinDate { get; set; }
 
         public bool IsModerator { get; set; }
@@ -24,12 +32,13 @@ namespace OSSocial.Models
         // constructori
         public GroupMember() { }
 
-        public GroupMember(string userId, int groupId)
+        public GroupMember(string userId, int groupId, RequestStatus status)
         {
             UserId = userId;
             GroupId = groupId;
             JoinDate = DateTime.Now;
             IsModerator = false;
+            Status = status;
         }
     }
 }
