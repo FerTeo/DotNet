@@ -1,0 +1,23 @@
+# 1. Build (Folosind SDK-ul pentru a compila codul)
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+WORKDIR /src
+
+# Copiere fișier proiect și restore pt a ajuta la caching
+COPY ["OSSocial/OSSocial.csproj", "OSSocial/"]
+RUN dotnet restore "OSSocial/OSSocial.csproj"
+
+# Copiem restul codului și compilăm versiunea de Release
+COPY . .
+WORKDIR "/src/OSSocial"
+RUN dotnet publish "OSSocial.csproj" -c Release -o /app/publish /p:UseAppHost=false
+
+# 2. Runtime (Folosind o imagine doar cu runtime-ul, fara unelte de dev)
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
+WORKDIR /app
+EXPOSE 8080
+
+# Copiem codul compilat din etapa 1
+COPY --from=build /app/publish .
+
+# Definim comanda de start
+ENTRYPOINT ["dotnet", "OSSocial.dll"]
