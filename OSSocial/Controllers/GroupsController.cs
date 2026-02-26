@@ -12,8 +12,7 @@ namespace OSSocial.Controllers
     public class GroupsController
     (
         ApplicationDbContext context,
-        UserManager<ApplicationUser> userManager,
-        RoleManager<IdentityRole> roleManager
+        UserManager<ApplicationUser> userManager
     ) : Controller
     {
 
@@ -129,7 +128,7 @@ namespace OSSocial.Controllers
             // pt a afisa toti membrii grupului (only ACCEPTED)
             var member = _db.GroupMembers 
                 .Include(gm => gm.User)
-                .Where(gm => gm.GroupId == group.Id && gm.UserId != _userManager.GetUserId(User))
+                .Where(gm => gm.GroupId == group.Id && gm.UserId != _userManager.GetUserId(User!))
                 .ToList();
             
             ViewBag.Members = member;
@@ -153,6 +152,12 @@ namespace OSSocial.Controllers
         {
             // owner 
             group.UserId = _userManager.GetUserId(User);
+            
+            var currentUserId = _userManager.GetUserId(User);
+            if (currentUserId == null)
+            {
+                return BadRequest();
+            }
 
             if (ModelState.IsValid)
             {
@@ -160,7 +165,7 @@ namespace OSSocial.Controllers
                 _db.SaveChanges();
                 
                 // also need to add owner member entry
-                GroupMember groupMember = new GroupMember(_userManager.GetUserId(User), group.Id,RequestStatus.Accepted);
+                GroupMember groupMember = new GroupMember(currentUserId, group.Id,RequestStatus.Accepted);
                 groupMember.IsModerator = true;
                 
                 _db.GroupMembers.Add(groupMember);
@@ -225,6 +230,11 @@ namespace OSSocial.Controllers
             {
                 GroupMember newMember = new GroupMember(currentUser.Id.ToString(), group.Id,RequestStatus.Pending);
                 _db.GroupMembers.Add(newMember);
+
+                if (group.UserId == null)
+                {
+                    return BadRequest();
+                }
 
                 //grupul este privat deci trimitem notificare
                 var notification = new Notification

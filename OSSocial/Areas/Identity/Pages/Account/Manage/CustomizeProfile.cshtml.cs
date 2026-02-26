@@ -26,8 +26,7 @@ namespace OSSocial.Areas.Identity.Pages.Account.Manage
             _env = env;
         }
 
-        [BindProperty]
-        public InputModel Input { get; set; }
+        [BindProperty] public InputModel Input { get; set; } = new InputModel();
 
         public string? CurrentImageUrl { get; set; }
 
@@ -37,6 +36,7 @@ namespace OSSocial.Areas.Identity.Pages.Account.Manage
 
             [Display(Name = "Bio")]
             [MaxLength(1000)]
+            [Required]
             public string? Bio { get; set; }
 
             [Display(Name = "Private account")]

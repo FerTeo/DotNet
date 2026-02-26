@@ -9,7 +9,7 @@
     var totalLikes = Db.Reactions.Count(r => r.PostId == postId);
     var liked = false;
 
-    if (User.Identity.IsAuthenticated)
+    if (User?.Identity?.IsAuthenticated==true)
     {
         var userId = UserManager.GetUserId(User);
         liked = Db.Reactions.Any(r => r.PostId == postId && r.UserId == userId);

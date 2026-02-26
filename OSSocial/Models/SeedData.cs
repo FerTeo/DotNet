@@ -27,12 +27,8 @@ namespace OSSocial.Models
             
             context.SaveChanges();
         }
-
-       
         private static void Seed_Users(ApplicationDbContext context)
         {
-            // o noua instanta pe care o vom utiliza pentru crearea parolelor utilizatorilor
-            // parolele sunt de tip hash
             var hasher = new PasswordHasher<ApplicationUser>();
             
             context.Users.AddRange

@@ -15,8 +15,7 @@ namespace OSSocial.Controllers
     public class NotificationsController
     (
         ApplicationDbContext context,
-        UserManager<ApplicationUser> userManager,
-        RoleManager<IdentityRole> roleManager
+        UserManager<ApplicationUser> userManager
     ) : Controller
     {
         private readonly ApplicationDbContext _db=context;
