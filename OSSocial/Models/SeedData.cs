@@ -19,12 +19,6 @@ namespace OSSocial.Models
                 },
                 new IdentityRole
                 {
-                    Id = "2c5e174e-3b0e-446f-86af-483d56fd7211",
-                    Name = "Editor",
-                    NormalizedName = "Editor".ToUpper()
-                },
-                new IdentityRole
-                {
                     Id = "2c5e174e-3b0e-446f-86af-483d56fd7212",
                     Name = "User",
                     NormalizedName = "User".ToUpper()
@@ -54,20 +48,6 @@ namespace OSSocial.Models
                     PasswordHash = hasher.HashPassword(null, "Admin123!"),
                     DisplayName = "Admin",
                     Bio = "Admin of the web application",
-                    PhoneNumber = "0888888888",
-                    PhoneNumberConfirmed = true,
-                },
-                new ApplicationUser
-                {
-                    Id = "8e445865-a24d-4543-a6c6-9443d048cdb1", // primary key
-                    UserName = "editor",
-                    EmailConfirmed = true,
-                    NormalizedEmail = "EDITOR@TEST.COM",
-                    Email = "editor@test.com",
-                    NormalizedUserName = "editor",
-                    PasswordHash = hasher.HashPassword(null, "Editor123!"),
-                    DisplayName = "Editor", 
-                    Bio = "Your favourite editor",
                     PhoneNumber = "0888888888",
                     PhoneNumberConfirmed = true,
                 },
@@ -145,11 +125,6 @@ namespace OSSocial.Models
                 },
                 new IdentityUserRole<string>
                 {
-                    RoleId = "2c5e174e-3b0e-446f-86af-483d56fd7211", //rol editor
-                    UserId = "8e445865-a24d-4543-a6c6-9443d048cdb1"
-                },
-                new IdentityUserRole<string>
-                {
                     RoleId = "2c5e174e-3b0e-446f-86af-483d56fd7212", //rol user
                     UserId = "8e445865-a24d-4543-a6c6-9443d048cdb2" //user
                 },
@@ -192,7 +167,16 @@ namespace OSSocial.Models
                         Description = "Group for people how like to travel and eat good food",
                         UserId = "8e445865-a24d-4543-a6c6-9443d048cdb3",//fernando
                         IsPublic = true
+                    },
+                    new Group
+                    {
+                        Id = 3,
+                        Name = "FMI Bookclub",
+                        Description = "Group made for fmi students and their book reviews",
+                        UserId = "8e445865-a24d-4543-a6c6-9443d048cdb4",//teo
+                        IsPublic = false
                     }
+                    
                 
                 );
             
@@ -238,6 +222,21 @@ namespace OSSocial.Models
                     GroupId = 2, //travell
                     JoinDate = DateTime.Now,
                     IsModerator = true
+                },
+                
+                new GroupMember
+                {
+                    UserId = "8e445865-a24d-4543-a6c6-9443d048cdb4", //teo
+                    GroupId = 3, //bookclub
+                    JoinDate = DateTime.Now,
+                    IsModerator = true
+                },
+                new GroupMember
+                {
+                    UserId = "8e445865-a24d-4543-a6c6-9443d048cdb3", //teo
+                    GroupId = 3, //bookclub
+                    JoinDate = DateTime.Now,
+                    IsModerator = false
                 }
                 
             );
@@ -302,6 +301,24 @@ namespace OSSocial.Models
                     UserId = "8e445865-a24d-4543-a6c6-9443d048cdb3", // fernando
                     Media = "/images/7acca6fc-7d54-419d-ad30-cce79925e4c4_london.JPG",
                     GroupId = 2 //travel
+                },
+                new Post
+                {
+                    Title = "Murakami",
+                    Content = "Tocmai am citit Cronica Pasarii Arc de Murakami. Pareri?",
+                    Time = DateTime.Now,
+                    UserId = "8e445865-a24d-4543-a6c6-9443d048cdb3", // fernando
+                    Media = null,
+                    GroupId = 3 //bookclub
+                },
+                new Post
+                {
+                    Title = "Check this out!",
+                    Content = "Check this out!",
+                    Time = DateTime.Now,
+                    UserId = "8e445865-a24d-4543-a6c6-9443d048cdb3", // fernando
+                    Media = null,
+                    GroupId = 3 //bookclub
                 }
                 
             );
