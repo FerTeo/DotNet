@@ -44,6 +44,10 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     var context = services.GetRequiredService<ApplicationDbContext>();
 
+    // migrari facute automat la pornirea aplicatiei (NECESAR pentru deployment)
+    context.Database.Migrate(); 
+
+    // inserare date initiale in baza de date (roluri, useri, grupuri, postari)
     SeedData.Initialize(services);
 }
 
