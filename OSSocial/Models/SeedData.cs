@@ -19,12 +19,6 @@ namespace OSSocial.Models
                 },
                 new IdentityRole
                 {
-                    Id = "2c5e174e-3b0e-446f-86af-483d56fd7211",
-                    Name = "Editor",
-                    NormalizedName = "Editor".ToUpper()
-                },
-                new IdentityRole
-                {
                     Id = "2c5e174e-3b0e-446f-86af-483d56fd7212",
                     Name = "User",
                     NormalizedName = "User".ToUpper()
@@ -36,100 +30,83 @@ namespace OSSocial.Models
         private static void Seed_Users(ApplicationDbContext context)
         {
             var hasher = new PasswordHasher<ApplicationUser>();
-
-            var admin = new ApplicationUser
-            {
-                Id = "8e445865-a24d-4543-a6c6-9443d048cdb0",
-                UserName = "admin",
-                EmailConfirmed = true,
-                NormalizedEmail = "ADMIN@TEST.COM",
-                Email = "admin@test.com",
-                NormalizedUserName = "ADMIN",
-                DisplayName = "Admin",
-                Bio = "Admin of the web application",
-                PhoneNumber = "0888888888",
-                PhoneNumberConfirmed = true,
-            };
-            admin.PasswordHash = hasher.HashPassword(admin, "Admin123!");
-
-            var editor = new ApplicationUser
-            {
-                Id = "8e445865-a24d-4543-a6c6-9443d048cdb1",
-                UserName = "editor",
-                EmailConfirmed = true,
-                NormalizedEmail = "EDITOR@TEST.COM",
-                Email = "editor@test.com",
-                NormalizedUserName = "editor",
-                DisplayName = "Editor",
-                Bio = "Your favourite editor",
-                PhoneNumber = "0888888888",
-                PhoneNumberConfirmed = true,
-            };
-            editor.PasswordHash = hasher.HashPassword(editor, "Editor123!");
-
-            var user = new ApplicationUser
-            {
-                Id = "8e445865-a24d-4543-a6c6-9443d048cdb2",
-                UserName = "user",
-                EmailConfirmed = true,
-                NormalizedEmail = "USER@TEST.COM",
-                Email = "user@test.com",
-                NormalizedUserName = "USER",
-                DisplayName = "User",
-                Bio = "Your favourite user",
-                PhoneNumber = "0888888888",
-                PhoneNumberConfirmed = true,
-            };
-            user.PasswordHash = hasher.HashPassword(user, "User123!");
-
-            var fernando = new ApplicationUser
-            {
-                Id = "8e445865-a24d-4543-a6c6-9443d048cdb3",
-                UserName = "fernando",
-                EmailConfirmed = true,
-                NormalizedEmail = "FERNANDO@TEST.COM",
-                Email = "fernando@test.com",
-                PhoneNumber = "0666666666",
-                NormalizedUserName = "FERNANDO",
-                DisplayName = "Fernando-Emanuel",
-                Bio = "Your one and only fernando",
-                ProfileImageUrl = "/images/b19f355f-9ec5-4047-bd3d-d129db850b79_emo.JPG",
-                IsPrivate = true
-            };
-            fernando.PasswordHash = hasher.HashPassword(fernando, "Fernando1!");
-
-            var r0scat = new ApplicationUser
-            {
-                Id = "8e445865-a24d-4543-a6c6-9443d048cdb4",
-                UserName = "r0scat",
-                EmailConfirmed = true,
-                NormalizedEmail = "teo@test.COM",
-                Email = "teo@test.com",
-                PhoneNumber = "0676767677",
-                NormalizedUserName = "R0SCAT",
-                DisplayName = "Teo",
-                ProfileImageUrl = "/images/04def228-790e-403d-ae29-f5bebf347492_cute.JPG",
-                IsPrivate = false
-            };
-            r0scat.PasswordHash = hasher.HashPassword(r0scat, "Teo123!");
-
-            var musiclover = new ApplicationUser
-            {
-                Id = "8e445865-a24d-4543-a6c6-9443d048cdb5",
-                UserName = "musiclover",
-                EmailConfirmed = true,
-                NormalizedEmail = "MUSICLOVER@TEST.COM",
-                Email = "musiclover@test.com",
-                PhoneNumber = "0666666666",
-                NormalizedUserName = "MUSICLOVER",
-                DisplayName = "Music Lover",
-                Bio = "Hi! I really love music",
-                ProfileImageUrl = "/images/2424195d-2666-4529-bed6-046bdf17f19b_ipod.jpg",
-                IsPrivate = true
-            };
-            musiclover.PasswordHash = hasher.HashPassword(musiclover, "Musiclover123!");
-
-            context.Users.AddRange(admin, editor, user, fernando, r0scat, musiclover);
+            
+            context.Users.AddRange
+            (
+                new ApplicationUser
+                {
+                    Id = "8e445865-a24d-4543-a6c6-9443d048cdb0", // primary key
+                    UserName = "admin",
+                    EmailConfirmed = true,
+                    NormalizedEmail = "ADMIN@TEST.COM",
+                    Email = "admin@test.com",
+                    NormalizedUserName = "ADMIN",
+                    PasswordHash = hasher.HashPassword(null, "Admin123!"),
+                    DisplayName = "Admin",
+                    Bio = "Admin of the web application",
+                    PhoneNumber = "0888888888",
+                    PhoneNumberConfirmed = true,
+                },
+                new ApplicationUser
+                {
+                    Id = "8e445865-a24d-4543-a6c6-9443d048cdb2", // primary key
+                    UserName = "user",
+                    EmailConfirmed = true,
+                    NormalizedEmail = "USER@TEST.COM",
+                    Email = "user@test.com",
+                    NormalizedUserName = "USER",
+                    PasswordHash = hasher.HashPassword(null, "User123!"),
+                    DisplayName = "User",
+                    Bio = "Your favourite user",
+                    PhoneNumber = "0888888888",
+                    PhoneNumberConfirmed = true,
+                },
+                new ApplicationUser
+                {
+                    Id = "8e445865-a24d-4543-a6c6-9443d048cdb3", // primary key
+                    UserName = "fernando",
+                    EmailConfirmed = true,
+                    NormalizedEmail = "FERNANDO@TEST.COM",
+                    Email = "fernando@test.com",
+                    PhoneNumber = "0666666666",
+                    NormalizedUserName = "FERNANDO",
+                    PasswordHash = hasher.HashPassword(null, "Fernando1!"),
+                    DisplayName = "Fernando-Emanuel",
+                    Bio = "Your one and only fernando",
+                    ProfileImageUrl = "/images/b19f355f-9ec5-4047-bd3d-d129db850b79_emo.JPG",
+                    IsPrivate = true
+                },
+                new ApplicationUser
+                {
+                    Id = "8e445865-a24d-4543-a6c6-9443d048cdb4", // primary key
+                    UserName = "r0scat",
+                    EmailConfirmed = true,
+                    NormalizedEmail = "teo@test.COM",
+                    Email = "teo@test.com",
+                    PhoneNumber = "0676767677",
+                    NormalizedUserName = "R0SCAT",
+                    PasswordHash = hasher.HashPassword(null, "Teo123!"),
+                    DisplayName = "Teo",
+                    ProfileImageUrl = "/images/04def228-790e-403d-ae29-f5bebf347492_cute.JPG",
+                    IsPrivate = false
+                },
+                new ApplicationUser
+                {
+                    Id = "8e445865-a24d-4543-a6c6-9443d048cdb5", // primary key
+                    UserName = "musiclover",
+                    EmailConfirmed = true,
+                    NormalizedEmail = "MUSICLOVER@TEST.COM",
+                    Email = "musiclover@test.com",
+                    PhoneNumber = "0666666666",
+                    NormalizedUserName = "MUSICLOVER",
+                    PasswordHash = hasher.HashPassword(null, "Musiclover123!"),
+                    DisplayName = "Music Lover",
+                    Bio = "Hi! I really love music",
+                    ProfileImageUrl = "/images/2424195d-2666-4529-bed6-046bdf17f19b_ipod.jpg",
+                    IsPrivate = true
+                }
+            );
+            
             context.SaveChanges();
         }
         
@@ -141,11 +118,6 @@ namespace OSSocial.Models
                 {
                     RoleId = "2c5e174e-3b0e-446f-86af-483d56fd7210", //rol admin
                     UserId = "8e445865-a24d-4543-a6c6-9443d048cdb0"
-                },
-                new IdentityUserRole<string>
-                {
-                    RoleId = "2c5e174e-3b0e-446f-86af-483d56fd7211", //rol editor
-                    UserId = "8e445865-a24d-4543-a6c6-9443d048cdb1"
                 },
                 new IdentityUserRole<string>
                 {
@@ -191,7 +163,16 @@ namespace OSSocial.Models
                         Description = "Group for people how like to travel and eat good food",
                         UserId = "8e445865-a24d-4543-a6c6-9443d048cdb3",//fernando
                         IsPublic = true
+                    },
+                    new Group
+                    {
+                        Id = 3,
+                        Name = "FMI Bookclub",
+                        Description = "Group made for fmi students and their book reviews",
+                        UserId = "8e445865-a24d-4543-a6c6-9443d048cdb4",//teo
+                        IsPublic = false
                     }
+                    
                 
                 );
             
@@ -237,6 +218,21 @@ namespace OSSocial.Models
                     GroupId = 2, //travell
                     JoinDate = DateTime.Now,
                     IsModerator = true
+                },
+                
+                new GroupMember
+                {
+                    UserId = "8e445865-a24d-4543-a6c6-9443d048cdb4", //teo
+                    GroupId = 3, //bookclub
+                    JoinDate = DateTime.Now,
+                    IsModerator = true
+                },
+                new GroupMember
+                {
+                    UserId = "8e445865-a24d-4543-a6c6-9443d048cdb3", //teo
+                    GroupId = 3, //bookclub
+                    JoinDate = DateTime.Now,
+                    IsModerator = false
                 }
                 
             );
@@ -301,6 +297,24 @@ namespace OSSocial.Models
                     UserId = "8e445865-a24d-4543-a6c6-9443d048cdb3", // fernando
                     Media = "/images/7acca6fc-7d54-419d-ad30-cce79925e4c4_london.JPG",
                     GroupId = 2 //travel
+                },
+                new Post
+                {
+                    Title = "Murakami",
+                    Content = "Tocmai am citit Cronica Pasarii Arc de Murakami. Pareri?",
+                    Time = DateTime.Now,
+                    UserId = "8e445865-a24d-4543-a6c6-9443d048cdb3", // fernando
+                    Media = null,
+                    GroupId = 3 //bookclub
+                },
+                new Post
+                {
+                    Title = "Check this out!",
+                    Content = "Check this out!",
+                    Time = DateTime.Now,
+                    UserId = "8e445865-a24d-4543-a6c6-9443d048cdb3", // fernando
+                    Media = null,
+                    GroupId = 3 //bookclub
                 }
                 
             );

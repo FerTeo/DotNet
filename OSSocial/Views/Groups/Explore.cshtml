@@ -21,6 +21,10 @@
                     <br />
 
                     <a asp-controller="Groups" asp-action="GroupProfile" asp-route-id="@group.Id" class="btn btn-dark">Show group profile</a>
+                    <form asp-controller="Groups" asp-action="JoinGroup" method="post" style="display:inline;">
+                        <input type="hidden" name="GroupId" value="@group.Id" />
+                        <button type="submit" class="btn btn-success btn-sm">Join</button>
+                    </form>
 
                 </div>
             </div>

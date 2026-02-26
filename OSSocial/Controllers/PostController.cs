@@ -25,14 +25,10 @@ namespace OSSocial.Controllers
         private readonly IContentAnalysisService _contentService=contentService;
 
 
-        [HttpGet("")]
-        public IActionResult Index()
-        {
-            return RedirectToAction("Explore");
-        }
 
-
-
+        
+        
+        
         /// <summary>
         ///  Afisarea postarilor publice
         /// </summary>
@@ -67,7 +63,6 @@ namespace OSSocial.Controllers
                     .ToList();
                 ViewBag.Posts = posts;
             }
-            
             
             return View();
         }
