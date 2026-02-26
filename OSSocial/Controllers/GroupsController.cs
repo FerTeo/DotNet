@@ -71,7 +71,6 @@ namespace OSSocial.Controllers
             var publicGroups = _db.Groups
                 .Include(g => g.Members)
                 .Include(g => g.User)
-                .Where(g => g.IsPublic)
                 .ToList();
             
             ViewBag.PublicGroups = publicGroups;
